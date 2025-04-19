@@ -1,0 +1,9 @@
+---
+# Result
+uint16 CODE_SUCCESS = 0
+uint16 CODE_NOT_FOUND = 1
+uint16 CODE_UNKNOWN_ERROR = 99
+
+DockingStation docking_station
+uint16 code                # 0 is success, otherwise is error code
+string message             # Information message

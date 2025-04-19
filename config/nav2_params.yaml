@@ -181,7 +181,7 @@ docking_server:
     openmower:
       plugin: 'opennav_docking::SimpleChargingDock'
       docking_threshold: 0.05
-      staging_x_offset: -2.0
+      staging_x_offset: -1.0
       
       use_external_detection_pose: false
       use_stall_detection: false
@@ -189,12 +189,6 @@ docking_server:
       use_battery_status: true
       charging_threshold: 0.2
 
-      external_detection_timeout: 1.0
-      external_detection_translation_x: -0.18
-      external_detection_translation_y: 0.0
-      external_detection_rotation_roll: -1.57
-      external_detection_rotation_pitch: -1.57
-      external_detection_rotation_yaw: 0.0
       filter_coef: 0.1
 
     controller:
@@ -202,6 +196,7 @@ docking_server:
       k_delta: 2.0
       v_linear_min: 0.15
       v_linear_max: 0.15
+      use_collision_detection: false # it doesn't work well now
 
 smoother_server:
   ros__parameters:

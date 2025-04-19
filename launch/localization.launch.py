@@ -65,6 +65,17 @@ def generate_launch_description():
                 ],
             ),
             Node(
+                package="open_mower_next",
+                executable="map_recorder",
+                name="map_recorder",
+                output="screen",
+                parameters=[
+                    {
+                        "use_sim_time": use_sim_time,
+                    }
+                ],
+            ),
+            Node(
                 package="robot_localization",
                 executable="ekf_node",
                 name="ekf_se_odom",

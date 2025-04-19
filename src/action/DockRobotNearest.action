@@ -1,0 +1,31 @@
+# goal definition
+---
+# Result codes
+uint16 CODE_SUCCESS = 0
+uint16 CODE_DOCK_NOT_IN_DB = 901
+uint16 CODE_DOCK_NOT_VALID = 902
+uint16 CODE_FAILED_TO_STAGE = 903
+uint16 CODE_FAILED_TO_DETECT_DOCK = 904
+uint16 CODE_FAILED_TO_CONTROL = 905
+uint16 CODE_FAILED_TO_CHARGE = 906
+uint16 CODE_UNKNOWN = 999
+
+DockingStation chosen_docking_station
+uint16 code                # 0 is success, otherwise is error code
+string message             # Information message
+uint16 num_retries         # Number of retries attempted
+---
+# Feedback
+# Status codes
+uint16 STATUS_NONE = 0
+uint16 STATUS_NAV_TO_STAGING_POSE = 1
+uint16 STATUS_INITIAL_PERCEPTION = 2
+uint16 STATUS_CONTROLLING = 3
+uint16 STATUS_WAIT_FOR_CHARGE = 4
+uint16 STATUS_RETRY = 5
+
+DockingStation chosen_docking_station
+uint16 status              # Current status of docking process
+string message             # Information message
+uint16 num_retries         # Number of retries attempted
+builtin_interfaces/Duration docking_time  # Docking time elapsed

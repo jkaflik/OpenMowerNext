@@ -273,6 +273,8 @@ geometry_msgs::msg::PoseStamped GeoJSONMap::calculateTwoPointsPose(geometry_msgs
                                                                    geometry_msgs::msg::Point32 point32)
 {
   geometry_msgs::msg::PoseStamped pose;
+  pose.header.frame_id = node_->get_parameter("world_frame").as_string();
+  pose.header.stamp = node_->now();
   pose.pose.position.x = origin.x;
   pose.pose.position.y = origin.y;
 
