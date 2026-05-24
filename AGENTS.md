@@ -28,8 +28,10 @@
 
 ## Verification
 - CI builds Docker images; the root Dockerfile runs `make custom-deps deps` then `make build-release`.
+- Unit CI runs `colcon test --ctest-args -LE integration`; integration CI is explicit and runs `colcon test --ctest-args -L integration`.
 - Docs CI uses Node 18, `docs/package-lock.json`, and `npm run docs:build`.
-- Tests are not wired beyond `ament_lint_auto_find_test_dependencies()` with copyright and cpplint disabled.
+- Repository-wide ament linters that scan `src/lib` or `docs/node_modules` are disabled in CMake; add focused tests instead of relying on global lint passes.
+- Webots integration tests are gated behind `OPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS=ON` and require `WEBOTS_HOME`, `WEBOTS_OFFSCREEN=1`, `xvfb`, and `libxcb-cursor0`.
 - The launch test at `src/map_server/test/load_geojson_map.test.py` is not registered in CMake; do not assume `colcon test` runs it.
 - C++ formatting uses `.clang-format` based on Google style with 100 columns and custom braces; `.clang-tidy` exists but no Make/CI target runs it.
 

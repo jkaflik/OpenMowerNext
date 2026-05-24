@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  ROS_DISTRO: jazzy
+
+jobs:
+  unit:
+    name: Unit
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup ROS
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: jazzy
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-colcon-common-extensions python3-vcstool
+          sudo rosdep init || true
+          rosdep update
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          make custom-deps deps
+
+      - name: Build external libraries
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          make build-libs
+
+      - name: Build package
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          source install/setup.bash
+          colcon build --symlink-install --packages-select open_mower_next
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          source install/setup.bash
+          colcon test --packages-select open_mower_next --event-handlers console_direct+ --ctest-args -LE integration --output-on-failure
+          colcon test-result --test-result-base build/open_mower_next/test_results --verbose
+
+  integration:
+    name: Integration
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'integration'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup ROS
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: jazzy
+
+      - name: Install tooling and Webots runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-colcon-common-extensions python3-vcstool xvfb libxcb-cursor0
+          sudo rosdep init || true
+          rosdep update
+
+      - name: Cache Webots
+        uses: actions/cache@v4
+        with:
+          path: ~/.ros/webotsR2025a
+          key: webots-R2025a-linux-x86-64
+
+      - name: Install Webots
+        shell: bash
+        run: |
+          webots_root="${HOME}/.ros/webotsR2025a"
+          webots_home="${webots_root}/webots"
+          if [ ! -x "${webots_home}/webots" ]; then
+            rm -rf "${webots_root}"
+            mkdir -p "${webots_root}"
+            curl -L -o /tmp/webots-R2025a-x86-64.tar.bz2 \
+              https://github.com/cyberbotics/webots/releases/download/R2025a/webots-R2025a-x86-64.tar.bz2
+            tar -xjf /tmp/webots-R2025a-x86-64.tar.bz2 -C "${webots_root}"
+          fi
+          test -x "${webots_home}/webots"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          make custom-deps deps
+
+      - name: Build external libraries
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          make build-libs
+
+      - name: Build package with integration tests
+        shell: bash
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          source install/setup.bash
+          colcon build --symlink-install --packages-select open_mower_next --cmake-args -DOPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS=ON
+
+      - name: Run integration tests
+        shell: bash
+        env:
+          WEBOTS_HOME: /home/runner/.ros/webotsR2025a/webots
+          WEBOTS_OFFSCREEN: "1"
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          source install/setup.bash
+          colcon test --packages-select open_mower_next --event-handlers console_direct+ --ctest-args -L integration --output-on-failure
+          colcon test-result --test-result-base build/open_mower_next/test_results --verbose

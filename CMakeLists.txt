@@ -35,6 +35,8 @@ find_package(Fields2Cover REQUIRED)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/share/cmake/geographiclib/")
 find_package(GeographicLib REQUIRED)
 
+option(OPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS "Enable explicit integration tests" OFF)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
         "src/srv/RemoveArea.srv"
         "src/srv/RemoveDockingStation.srv"
@@ -78,7 +80,19 @@ if (BUILD_TESTING)
     # comment the line when this package is in a git repo and when
     # a copyright and license is added to all source files
     set(ament_cmake_cpplint_FOUND TRUE)
+    # These repository-wide linters pick up vendored deps under src/lib and docs/node_modules.
+    set(ament_cmake_flake8_FOUND TRUE)
+    set(ament_cmake_lint_cmake_FOUND TRUE)
+    set(ament_cmake_pep257_FOUND TRUE)
+    set(ament_cmake_uncrustify_FOUND TRUE)
+    set(ament_cmake_xmllint_FOUND TRUE)
     ament_lint_auto_find_test_dependencies()
+
+    if (OPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS)
+        find_package(ament_cmake_pytest REQUIRED)
+        ament_add_pytest_test(webots_smoke test/integration/test_webots_smoke.py TIMEOUT 180)
+        set_tests_properties(webots_smoke PROPERTIES LABELS integration)
+    endif ()
 endif ()
 
 INSTALL(
