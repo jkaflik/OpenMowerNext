@@ -47,9 +47,11 @@ def generate_launch_description():
         name='nav2_container',
         package='rclcpp_components',
         executable='component_container_isolated',
-        parameters=[configured_params, {'autostart': autostart}],
+        parameters=[configured_params, {'autostart': autostart, 'use_sim_time': use_sim_time}],
         remappings=remappings,
         output='screen')
+
+    common_node_params = [configured_params, {'use_sim_time': use_sim_time}]
 
     load_composable_nodes = LoadComposableNodes(
         target_container='nav2_container',
@@ -58,44 +60,44 @@ def generate_launch_description():
                 package='nav2_controller',
                 plugin='nav2_controller::ControllerServer',
                 name='controller_server',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings + [('cmd_vel', 'cmd_vel_raw')]),
             ComposableNode(
                 package='nav2_bt_navigator',
                 plugin='nav2_bt_navigator::BtNavigator',
                 name='bt_navigator',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings),
             ComposableNode(
                 package='nav2_behaviors',
                 plugin='behavior_server::BehaviorServer',
                 name='behavior_server',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings + [('cmd_vel', 'cmd_vel_raw')],),
             ComposableNode(
                 package='nav2_planner',
                 plugin='nav2_planner::PlannerServer',
                 name='planner_server',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings),
             ComposableNode(
                 package='nav2_smoother',
                 plugin='nav2_smoother::SmootherServer',
                 name='smoother_server',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings),
             ComposableNode(
                 package='nav2_velocity_smoother',
                 plugin='nav2_velocity_smoother::VelocitySmoother',
                 name='velocity_smoother',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings +
                            [('cmd_vel', 'cmd_vel_raw'), ('cmd_vel_smoothed', 'cmd_vel_nav')]),
             ComposableNode(
                 package='opennav_docking',
                 plugin='opennav_docking::DockingServer',
                 name='docking_server',
-                parameters=[configured_params],
+                parameters=common_node_params,
                 remappings=remappings + [('cmd_vel', 'cmd_vel_raw')]),
             ComposableNode(
                 package='nav2_lifecycle_manager',

@@ -73,6 +73,8 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>action_msgs</test_depend>
+  <test_depend>lifecycle_msgs</test_depend>
   <test_depend>rclpy</test_depend>
   <test_depend>rosgraph_msgs</test_depend>
 

@@ -4,6 +4,7 @@ import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, EmitEvent, IncludeLaunchDescription, RegisterEventHandler
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -11,6 +12,7 @@ from launch.substitutions import LaunchConfiguration
 from launch.substitutions.path_join_substitution import PathJoinSubstitution
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 from webots_ros2_driver.wait_for_controller_connection import WaitForControllerConnection
 from webots_ros2_driver.webots_controller import WebotsController
 from webots_ros2_driver.webots_launcher import Ros2SupervisorLauncher, WebotsLauncher
@@ -30,6 +32,7 @@ def generate_launch_description():
     mode = LaunchConfiguration("mode")
     gui = LaunchConfiguration("gui")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    enable_foxglove = LaunchConfiguration("enable_foxglove")
 
     xacro_file = os.path.join(share_directory, "description", "robot.urdf.xacro")
     robot_description_config = xacro.process_file(
@@ -143,11 +146,12 @@ def generate_launch_description():
 
     foxglove_bridge = IncludeLaunchDescription(
         XMLLaunchDescriptionSource(
-            [get_package_share_directory("foxglove_bridge"), "/launch/foxglove_bridge_launch.xml"]
+            [PathJoinSubstitution([FindPackageShare("foxglove_bridge"), "launch", "foxglove_bridge_launch.xml"])]
         ),
         launch_arguments={
             "include_hidden": "true",
         }.items(),
+        condition=IfCondition(enable_foxglove),
     )
 
     return LaunchDescription(
@@ -156,6 +160,7 @@ def generate_launch_description():
             DeclareLaunchArgument("mode", default_value="realtime"),
             DeclareLaunchArgument("gui", default_value="true"),
             DeclareLaunchArgument("use_sim_time", default_value="true"),
+            DeclareLaunchArgument("enable_foxglove", default_value="true"),
             webots,
             webots_supervisor,
             node_robot_state_publisher,

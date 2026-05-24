@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "navigation-docking-area",
+        "name": "navigation docking test area",
+        "type": "navigation",
+        "fill": "#0000ff",
+        "style": {
+          "color": "#0000ff"
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -43.200014627597426,
+              -22.900013474729260
+            ],
+            [
+              -43.199960993073546,
+              -22.900013474729260
+            ],
+            [
+              -43.199960993073546,
+              -22.899974847172043
+            ],
+            [
+              -43.200014627597426,
+              -22.899974847172043
+            ],
+            [
+              -43.200014627597426,
+              -22.900013474729260
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "navigation-docking-test-dock",
+        "name": "Navigation Docking Test Dock",
+        "type": "docking_station"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -43.199982251848468,
+            -22.899986525270737
+          ],
+          [
+            -43.199987127714273,
+            -22.899986525270737
+          ]
+        ]
+      }
+    }
+  ]
+}

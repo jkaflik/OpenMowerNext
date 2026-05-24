@@ -54,10 +54,11 @@ open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
   docking_station_frame_ = this->declare_parameter<std::string>("docking_station_frame", "map");
   charging_port_frame_ =
     this->declare_parameter<std::string>("charging_port_frame", "charging_port");
+  // Temporary tolerance for the Webots dock geometry while the exact contact offsets are tuned.
   docking_detection_tolerance_x_ =
-    this->declare_parameter<double>("docking_detection_tolerance_x", 0.05);
+    this->declare_parameter<double>("docking_detection_tolerance_x", 0.20);
   docking_detection_tolerance_y_ =
-    this->declare_parameter<double>("docking_detection_tolerance_y", 0.05);
+    this->declare_parameter<double>("docking_detection_tolerance_y", 0.12);
 
   auto docking_station_contact_yaw =
     this->declare_parameter<double>("docking_station_contact_yaw", 0.0);
