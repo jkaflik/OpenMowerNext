@@ -22,7 +22,7 @@ public:
 
 private:
   double robot_width_;         // Width of the robot platform
-  double operation_width_;   // Width of the mowing tool/blade
+  double operation_width_;     // Width of the mowing tool/blade
   double min_turning_radius_;  // Minimum turning radius of the robot
 
   rclcpp::Service<open_mower_next::srv::AreaCoverage>::SharedPtr area_coverage_service_;
@@ -46,18 +46,16 @@ private:
     const std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons,
     nav_msgs::msg::Path & response_paths, std::string & message);
 
-  void findExclusionsInPolygon(
+  bool findExclusionsInPolygon(
     const geometry_msgs::msg::PolygonStamped & field_polygon,
-    std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons);
+    std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons, std::string & message);
   f2c::types::Swaths generateSwaths(
-    const f2c::types::Robot & robot, const geometry_msgs::msg::PolygonStamped & field_polygon,
-    const std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons,
-    uint16_t headland_loops, uint16_t swath_angle);
+    const f2c::types::Robot & robot, const f2c::types::Cells & cells, uint16_t headland_loops,
+    uint16_t swath_angle);
 
   msg::Area::SharedPtr findAreaById(const std::string & area_id);
 
-  std::vector<std::string> findAreasInPolygon(
-    const geometry_msgs::msg::PolygonStamped & polygon);
+  std::vector<std::string> findAreasInPolygon(const geometry_msgs::msg::PolygonStamped & polygon);
 
   visualization_msgs::msg::MarkerArray createVisualizationMarkers(
     const f2c::types::Swaths & swaths, const std::string & frame_id);

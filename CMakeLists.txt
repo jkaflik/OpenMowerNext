@@ -48,6 +48,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "src/msg/Area.msg"
         "src/msg/Map.msg"
         "src/msg/DockingStation.msg"
+        "src/msg/PolygonWithHoles.msg"
+        "src/msg/CoverageGeometry.msg"
         "src/action/DockRobotTo.action"
         "src/action/DockRobotNearest.action"
         "src/action/RecordDockingStation.action"

@@ -1,0 +1,17 @@
+[Unit]
+Description=OpenMowerNext Foxglove bridge
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=@WORKSPACE@
+Environment=ROS_DISTRO=@ROS_DISTRO@
+Environment=FOXGLOVE_ADDRESS=@FOXGLOVE_ADDRESS@
+Environment=FOXGLOVE_PORT=@FOXGLOVE_PORT@
+Environment=FOXGLOVE_USE_SIM_TIME=@FOXGLOVE_USE_SIM_TIME@
+ExecStart=/bin/bash @WORKSPACE@/utils/run-foxglove.sh
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

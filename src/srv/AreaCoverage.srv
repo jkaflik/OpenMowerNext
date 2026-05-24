@@ -15,5 +15,5 @@ string message             # Information message
 
 nav_msgs/Path path
 
-geometry_msgs/PolygonStamped polygon # polygon used for the coverage
+CoverageGeometry coverage_geometry # geometry used for the coverage after exclusions
 string area_id # area id that defined the polygon

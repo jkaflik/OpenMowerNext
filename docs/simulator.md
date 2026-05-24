@@ -25,6 +25,11 @@ Run the simulator from the repository root:
 make sim
 ```
 
+By default this starts Webots with streaming enabled on port `1234`, so another machine on the same LAN can open `http://<host>:1234/index.html`, for example `http://lord.local:1234/index.html`.
+The `/` endpoint is not a normal HTTP page and may return an empty response; the actual simulation stream is a WebSocket on the same port.
+If the viewer defaults to `ws://localhost:1234`, change it to `ws://<host>:1234`, for example `ws://lord.local:1234`, and click Connect.
+Foxglove is intentionally not started by the simulator launch; run it separately with `make foxglove` when needed.
+
 For headless smoke tests on the development host, run:
 
 ```bash

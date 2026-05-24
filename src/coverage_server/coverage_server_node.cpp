@@ -55,6 +55,8 @@ void CoverageServerNode::handleAreaCoverageRequest(
   const std::shared_ptr<open_mower_next::srv::AreaCoverage::Request> request,
   std::shared_ptr<open_mower_next::srv::AreaCoverage::Response> response)
 {
+  (void)request_header;
+
   if (request->area_id.empty()) {
     response->code = open_mower_next::srv::AreaCoverage::Response::CODE_INVALID_AREA;
     response->message = "Area ID cannot be empty";
@@ -80,7 +82,7 @@ void CoverageServerNode::handleAreaCoverageRequest(
 
   const auto & area_polygon = area.get()->area;
 
-  if (area_polygon.polygon.points.empty()) {
+  if (!utils::isValid(area_polygon.polygon)) {
     response->code = open_mower_next::srv::AreaCoverage::Response::CODE_INVALID_AREA;
     response->message = "Area has an invalid polygon";
     return;
@@ -89,20 +91,32 @@ void CoverageServerNode::handleAreaCoverageRequest(
   // Find exclusions if requested
   std::vector<geometry_msgs::msg::PolygonStamped> exclusion_polygons;
   if (request->with_exclusions) {
-    findExclusionsInPolygon(area_polygon, exclusion_polygons);
+    std::string exclusion_message;
+    if (!findExclusionsInPolygon(area_polygon, exclusion_polygons, exclusion_message)) {
+      response->code = open_mower_next::srv::AreaCoverage::Response::CODE_INVALID_EXCLUSION;
+      response->message = exclusion_message;
+      return;
+    }
+  }
+
+  const auto coverage_cells = utils::toCells(area_polygon, exclusion_polygons);
+  if (coverage_cells.isEmpty() || coverage_cells.size() == 0) {
+    response->code = open_mower_next::srv::AreaCoverage::Response::CODE_INVALID_EXCLUSION;
+    response->message = "Exclusions remove the entire requested area";
+    return;
   }
 
   f2c::types::Robot robot(robot_width_, operation_width_, min_turning_radius_);
 
-  const auto swaths = generateSwaths(
-    robot, area_polygon, exclusion_polygons, request->headland_loops, request->swath_angle);
+  const auto swaths =
+    generateSwaths(robot, coverage_cells, request->headland_loops, request->swath_angle);
 
   nav_msgs::msg::Path path = utils::toMsg(swaths, area_polygon.header.frame_id);
 
   response->message = "Coverage path generated successfully";
   response->code = open_mower_next::srv::AreaCoverage::Response::CODE_SUCCESS;
   response->path = path;
-  response->polygon = area_polygon;
+  response->coverage_geometry = utils::toMsg(coverage_cells, area_polygon.header.frame_id);
   response->area_id = request->area_id;
 
   const auto markers = createVisualizationMarkers(swaths, area_polygon.header.frame_id);
@@ -134,6 +148,8 @@ msg::Area::SharedPtr CoverageServerNode::findAreaById(const std::string & area_i
 std::vector<std::string> CoverageServerNode::findAreasInPolygon(
   const geometry_msgs::msg::PolygonStamped & polygon)
 {
+  (void)polygon;
+
   std::vector<std::string> area_ids;
 
   for (const auto & area : current_map_.areas) {
@@ -147,45 +163,52 @@ std::vector<std::string> CoverageServerNode::findAreasInPolygon(
   return area_ids;
 }
 
-void CoverageServerNode::findExclusionsInPolygon(
+bool CoverageServerNode::findExclusionsInPolygon(
   const geometry_msgs::msg::PolygonStamped & field_polygon,
-  std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons)
+  std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons, std::string & message)
 {
   exclusion_polygons.clear();
+  message.clear();
+
+  const auto field_cell = utils::toCell(field_polygon);
 
   for (const auto & area : current_map_.areas) {
     if (area.type == open_mower_next::msg::Area::TYPE_EXCLUSION) {
-      // TODO: Implement proper polygon intersection test.
-      // There are three scenarios:
-      // 1. The exclusion area is completely inside the field polygon. Just add it.
-      // 2. The exclusion area is completely outside the field polygon. Ignore it.
-      // 3. The exclusion area intersects with the field polygon. Cut the intersection from the
-      // field polygon.
+      if (!utils::isValid(area.area.polygon)) {
+        message = "Exclusion area " + area.id + " has an invalid polygon";
+        return false;
+      }
 
       geometry_msgs::msg::PolygonStamped exclusion;
       exclusion.header = field_polygon.header;
       exclusion.polygon = area.area.polygon;
 
+      const auto exclusion_cell = utils::toCell(exclusion);
+      if (field_cell.disjoint(exclusion_cell)) {
+        RCLCPP_INFO(
+          get_logger(), "Skipping exclusion area outside field: %s, name: %s", area.id.c_str(),
+          area.name.c_str());
+        continue;
+      }
+
       exclusion_polygons.push_back(exclusion);
       RCLCPP_INFO(
-        get_logger(), "Adding exclusion area with ID: %s, name: %s", area.id.c_str(),
+        get_logger(), "Applying exclusion area with ID: %s, name: %s", area.id.c_str(),
         area.name.c_str());
     }
   }
 
   RCLCPP_INFO(get_logger(), "Found %zu exclusion areas", exclusion_polygons.size());
+  return true;
 }
 
 f2c::types::Swaths CoverageServerNode::generateSwaths(
-  const f2c::types::Robot & robot, const geometry_msgs::msg::PolygonStamped & field_polygon,
-  const std::vector<geometry_msgs::msg::PolygonStamped> & exclusion_polygons,
-  const uint16_t headland_loops = 0, const uint16_t swath_angle = 0)
+  const f2c::types::Robot & robot, const f2c::types::Cells & cells, const uint16_t headland_loops,
+  const uint16_t swath_angle)
 {
   f2c::hg::ConstHL hg;
 
   RCLCPP_INFO(get_logger(), "Generating swaths...");
-
-  f2c::types::Cells cells{utils::toCell(field_polygon, exclusion_polygons)};
 
   auto mainland = cells;
 
@@ -199,29 +222,44 @@ f2c::types::Swaths CoverageServerNode::generateSwaths(
     mainland = hg.generateHeadlands(cells, headland_width);
   }
 
+  if (mainland.isEmpty() || mainland.size() == 0) {
+    return f2c::types::Swaths{};
+  }
+
   f2c::sg::BruteForce swath_generator;
   f2c::obj::SwathLength swath_objective;
-
-  const auto best_angle =
-    swath_generator.computeBestAngle(swath_objective, robot.getCovWidth(), mainland.getGeometry(0));
-  const auto requested_angle = best_angle + (swath_angle * M_PI / 180.0);
-
-  f2c::types::Swaths swaths =
-    swath_generator.generateSwaths(requested_angle, robot.getCovWidth(), mainland.getGeometry(0));
-
-  RCLCPP_INFO(get_logger(), "Generated %zu swaths", swaths.size());
-
   const f2c::rp::BoustrophedonOrder sorter;
+  f2c::types::Swaths sorted_swaths;
 
-  f2c::types::Swaths sorted_swaths = sorter.genSortedSwaths(swaths);
+  for (size_t i = 0; i < mainland.size(); ++i) {
+    const auto cell = mainland.getGeometry(i);
+    if (cell.isEmpty() || cell.area() <= 0.0) {
+      continue;
+    }
+
+    const auto best_angle =
+      swath_generator.computeBestAngle(swath_objective, robot.getCovWidth(), cell);
+    const auto requested_angle = best_angle + (swath_angle * M_PI / 180.0);
+
+    const auto swaths = swath_generator.generateSwaths(requested_angle, robot.getCovWidth(), cell);
+    sorted_swaths.append(sorter.genSortedSwaths(swaths));
+  }
+
+  RCLCPP_INFO(get_logger(), "Generated %zu swaths", sorted_swaths.size());
 
   if (headland_loops > 0) {
     auto cells_vector = hg.generateHeadlandSwaths(cells, operation_width_, headland_loops, false);
 
-    for (auto & cell : cells_vector) {
-      for (auto & ring : cell.getGeometry(0)) {
-        sorted_swaths.append(
-          f2c::types::LineString(ring), robot.getCovWidth(), f2c::types::SwathType::HEADLAND);
+    for (auto & headland_cells : cells_vector) {
+      if (headland_cells.isEmpty() || headland_cells.size() == 0) {
+        continue;
+      }
+
+      for (size_t i = 0; i < headland_cells.size(); ++i) {
+        for (auto & ring : headland_cells.getGeometry(i)) {
+          sorted_swaths.append(
+            f2c::types::LineString(ring), robot.getCovWidth(), f2c::types::SwathType::HEADLAND);
+        }
       }
     }
 
@@ -245,7 +283,7 @@ visualization_msgs::msg::MarkerArray CoverageServerNode::createVisualizationMark
   delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
   markers.markers.push_back(delete_marker);
 
-  for (int i = 0; i < swaths.size(); ++i) {
+  for (size_t i = 0; i < swaths.size(); ++i) {
     if (i > 0) {
       visualization_msgs::msg::Marker connection_marker;
       connection_marker.ns = "connections";
@@ -255,11 +293,11 @@ visualization_msgs::msg::MarkerArray CoverageServerNode::createVisualizationMark
       connection_marker.color.a = 1.0f;
       connection_marker.header.frame_id = frame_id;
       connection_marker.header.stamp = now();
-      connection_marker.id = i;
+      connection_marker.id = static_cast<int>(i);
       connection_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
       connection_marker.action = visualization_msgs::msg::Marker::ADD;
       connection_marker.scale.x = 0.01;
-      connection_marker.points.push_back(utils::toMsg(swaths[i-1].endPoint()));
+      connection_marker.points.push_back(utils::toMsg(swaths[i - 1].endPoint()));
       connection_marker.points.push_back(utils::toMsg(swaths[i].startPoint()));
 
       markers.markers.push_back(connection_marker);
@@ -285,7 +323,7 @@ visualization_msgs::msg::MarkerArray CoverageServerNode::createVisualizationMark
 
     marker.header.frame_id = frame_id;
     marker.header.stamp = now();
-    marker.id = i;
+    marker.id = static_cast<int>(i);
     marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
     marker.action = visualization_msgs::msg::Marker::ADD;
     marker.scale.x = swath.getWidth();
@@ -293,7 +331,7 @@ visualization_msgs::msg::MarkerArray CoverageServerNode::createVisualizationMark
     const auto start_point = swath.startPoint();
     const auto end_point = swath.endPoint();
 
-    for (int j = 0; j < swath.numPoints(); ++j) {
+    for (size_t j = 0; j < swath.numPoints(); ++j) {
       const auto point = swath.getPoint(j);
       marker.points.push_back(utils::toMsg(point));
     }

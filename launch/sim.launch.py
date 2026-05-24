@@ -3,16 +3,20 @@ import os
 import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, EmitEvent, IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import (
+    DeclareLaunchArgument,
+    EmitEvent,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+    RegisterEventHandler,
+)
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch.substitutions.path_join_substitution import PathJoinSubstitution
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 from webots_ros2_driver.wait_for_controller_connection import WaitForControllerConnection
 from webots_ros2_driver.webots_controller import WebotsController
 from webots_ros2_driver.webots_launcher import Ros2SupervisorLauncher, WebotsLauncher
@@ -24,15 +28,25 @@ def shutdown_on_driver_failure(event, context):
     return [EmitEvent(event=Shutdown(reason="Webots driver exited unexpectedly"))]
 
 
-def generate_launch_description():
+def launch_setup(context, *args, **kwargs):
+    del args, kwargs
+
     package_name = "open_mower_next"
     share_directory = get_package_share_directory(package_name)
 
-    world = LaunchConfiguration("world")
-    mode = LaunchConfiguration("mode")
-    gui = LaunchConfiguration("gui")
+    world = LaunchConfiguration("world").perform(context)
+    mode = LaunchConfiguration("mode").perform(context)
+    gui = LaunchConfiguration("gui").perform(context)
+    webots_stream = LaunchConfiguration("webots_stream").perform(context).lower() in [
+        "true",
+        "1",
+        "yes",
+    ]
+    webots_port = LaunchConfiguration("webots_port").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time")
     enable_foxglove = LaunchConfiguration("enable_foxglove")
+    foxglove_address = LaunchConfiguration("foxglove_address")
+    foxglove_port = LaunchConfiguration("foxglove_port")
 
     xacro_file = os.path.join(share_directory, "description", "robot.urdf.xacro")
     robot_description_config = xacro.process_file(
@@ -59,9 +73,11 @@ def generate_launch_description():
     )
 
     webots = WebotsLauncher(
-        world=PathJoinSubstitution([share_directory, "worlds", world]),
+        world=os.path.join(share_directory, "worlds", world),
         mode=mode,
         gui=gui,
+        stream=webots_stream,
+        port=webots_port,
     )
     webots_supervisor = Ros2SupervisorLauncher(respawn=False)
 
@@ -146,42 +162,55 @@ def generate_launch_description():
 
     foxglove_bridge = IncludeLaunchDescription(
         XMLLaunchDescriptionSource(
-            [PathJoinSubstitution([FindPackageShare("foxglove_bridge"), "launch", "foxglove_bridge_launch.xml"])]
+            os.path.join(get_package_share_directory("foxglove_bridge"), "launch", "foxglove_bridge_launch.xml")
         ),
         launch_arguments={
+            "address": foxglove_address,
+            "port": foxglove_port,
             "include_hidden": "true",
+            "use_sim_time": use_sim_time,
         }.items(),
         condition=IfCondition(enable_foxglove),
     )
 
+    return [
+        webots,
+        webots_supervisor,
+        node_robot_state_publisher,
+        twist_mux,
+        webots_driver,
+        wait_for_webots_driver,
+        sim_node,
+        localization,
+        nav2,
+        foxglove_bridge,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=webots,
+                on_exit=[EmitEvent(event=Shutdown())],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=webots_driver,
+                on_exit=shutdown_on_driver_failure,
+            )
+        ),
+    ]
+
+
+def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("world", default_value="openmower.wbt"),
             DeclareLaunchArgument("mode", default_value="realtime"),
             DeclareLaunchArgument("gui", default_value="true"),
+            DeclareLaunchArgument("webots_stream", default_value="true"),
+            DeclareLaunchArgument("webots_port", default_value="1234"),
             DeclareLaunchArgument("use_sim_time", default_value="true"),
-            DeclareLaunchArgument("enable_foxglove", default_value="true"),
-            webots,
-            webots_supervisor,
-            node_robot_state_publisher,
-            twist_mux,
-            webots_driver,
-            wait_for_webots_driver,
-            sim_node,
-            localization,
-            nav2,
-            foxglove_bridge,
-            RegisterEventHandler(
-                event_handler=OnProcessExit(
-                    target_action=webots,
-                    on_exit=[EmitEvent(event=Shutdown())],
-                )
-            ),
-            RegisterEventHandler(
-                event_handler=OnProcessExit(
-                    target_action=webots_driver,
-                    on_exit=shutdown_on_driver_failure,
-                )
-            ),
+            DeclareLaunchArgument("enable_foxglove", default_value="false"),
+            DeclareLaunchArgument("foxglove_address", default_value="0.0.0.0"),
+            DeclareLaunchArgument("foxglove_port", default_value="8765"),
+            OpaqueFunction(function=launch_setup),
         ]
     )

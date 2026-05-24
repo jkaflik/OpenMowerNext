@@ -14,3 +14,19 @@ Download the latest release from the [Foxglove Studio](https://foxglove.dev/down
 ## Usage
 
 Connect to your ROS system by using Foxglove Websocket connection. This project comes with [Foxglove bridge](https://foxglove.dev/docs/studio/connection/using-foxglove-bridge) installed. Instructions are available [here](https://foxglove.dev/docs/studio/connection/ros2#foxglove-websocket).
+
+Start the bridge from the repository root:
+
+```bash
+make foxglove
+```
+
+It listens on `0.0.0.0:8765` by default. From another machine on the same LAN, connect Foxglove Studio to `ws://<host>:8765`, for example `ws://lord.local:8765`.
+
+To install it as a user service:
+
+```bash
+make foxglove-service-enable
+```
+
+Useful service commands are `make foxglove-service-status`, `make foxglove-service-restart`, `make foxglove-service-disable`, and `make foxglove-service-logs`.
