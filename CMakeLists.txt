@@ -82,7 +82,7 @@ if (BUILD_TESTING)
 endif ()
 
 INSTALL(
-        DIRECTORY config launch description worlds maps
+        DIRECTORY config launch description worlds maps protos resource
         DESTINATION share/${PROJECT_NAME}
 )
 

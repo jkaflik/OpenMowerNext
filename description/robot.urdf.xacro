@@ -15,7 +15,7 @@
     <xacro:if value="$(arg use_ros2_control)">
         <xacro:include filename="ros2_control.xacro" />
     </xacro:if>
-    <xacro:unless value="$(arg use_ros2_control)">
-        <xacro:include filename="gazebo_control.xacro" />
-    </xacro:unless>
+    <xacro:if value="$(arg sim_mode)">
+        <xacro:include filename="webots_control.xacro" />
+    </xacro:if>
 </robot>

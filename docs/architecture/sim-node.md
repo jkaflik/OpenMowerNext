@@ -11,7 +11,7 @@ Sim Node is a ROS node that simulates hardware components of the robot in a virt
 - Battery state simulation
 - Charging simulation
 
-The node is designed to work with the Gazebo simulator, listening to model poses and publishing hardware-like topics that mimic the real robot's behavior.
+The node is designed to work with the Webots simulator, using a configured docking contact pose and publishing hardware-like topics that mimic the real robot's behavior.
 
 > [!IMPORTANT]
 > The node requires transform information between the robot's `base_link` and `charging_port` to accurately detect docking.
@@ -25,7 +25,7 @@ The Sim Node detects when the robot's `charging_port` frame is in close proximit
 - The battery will start charging
 - A charging voltage will be published on the `/power/charge_voltage` topic
 
-The node applies configurable offsets to the docking station pose to better represent the actual charging connector position.
+The docking station contact pose is configured in the simulation launch file to match the Webots docking station model.
 
 ## Battery Simulation
 
@@ -43,15 +43,22 @@ The battery simulation provides a simplified model of a real battery system:
 | `/power` | `sensor_msgs/BatteryState` | Battery state information including voltage, percentage, and status |
 | `/power/charge_voltage` | `std_msgs/Float32` | Voltage provided by the charger when docked |
 
-## Topics Subscribed
+## Parameters
 
-| Topic | Type | Description |
-|-------|------|-------------|
-| `/model/docking_station/pose` | `geometry_msgs/Pose` | Pose of the docking station in the simulation. See ros_gz_bridge for more details. |
+| Parameter | Description |
+|-----------|-------------|
+| `docking_station_frame` | Frame where the dock contact pose is defined, usually `map`. |
+| `charging_port_frame` | Robot charging port frame, usually `charging_port`. |
+| `docking_station_contact_x` | Dock contact X coordinate in `docking_station_frame`. |
+| `docking_station_contact_y` | Dock contact Y coordinate in `docking_station_frame`. |
+| `docking_station_contact_z` | Dock contact Z coordinate in `docking_station_frame`. |
+| `docking_station_contact_yaw` | Dock contact yaw in `docking_station_frame`. |
+| `docking_detection_tolerance_x` | Maximum charging port X offset from the dock contact pose. |
+| `docking_detection_tolerance_y` | Maximum charging port Y offset from the dock contact pose. |
 
 ## Implementation Details
 
-The simulation uses the TF2 library to get the current position of the robot's charging port relative to the map frame. It then calculates the relative position to the docking station to determine if the robot is correctly docked.
+The simulation uses the TF2 library to get the current position of the robot's charging port relative to the configured docking station frame. It then calculates the relative position to the configured docking contact pose to determine if the robot is correctly docked.
 
 Docking is considered successful when the charging port is within 5cm of the docking station's charging contacts. When docked, the battery charging simulation is activated.
 

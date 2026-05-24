@@ -5,7 +5,7 @@
 - Do not add nested ROS packages under `src/`; C++ nodes live in functional dirs like `src/map_server`, `src/map_recorder`, `src/docking_helper`, `src/coverage_server`, and `src/sim`.
 - Keep each node's headers and sources together; add new node targets through root `CMakeLists.txt` and the `cmake/*.cmake` include files.
 - Interface files live in `src/msg`, `src/srv`, and `src/action`; add new ones to `rosidl_generate_interfaces()` in root `CMakeLists.txt`.
-- Runtime resources installed by CMake are only `config`, `launch`, `description`, `worlds`, and `maps`; update the root `INSTALL(DIRECTORY ...)` if adding another runtime resource dir.
+- Runtime resources installed by CMake are `config`, `launch`, `description`, `worlds`, `maps`, `protos`, and `resource`; update the root `INSTALL(DIRECTORY ...)` if adding another runtime resource dir.
 
 ## Environment
 - Use ROS 2 Jazzy. The devcontainer mounts the repo at `/opt/ws` and runs post-create `make custom-deps deps`.
@@ -21,7 +21,8 @@
 - Focused package build: `colcon build --symlink-install --packages-select open_mower_next`.
 - Source before direct launches: `source /opt/ros/$ROS_DISTRO/setup.bash && source install/setup.bash`.
 - Hardware launch from repo root: `make run`.
-- Sim launch from repo root: `make sim`; it sources `.devcontainer/default.env`, kills `ruby`, then launches `launch/sim.launch.py`.
+- Sim launch from repo root: `make sim`; it sources ROS, the installed workspace, `.devcontainer/default.env`, then launches `open_mower_next sim.launch.py` with Webots.
+- Headless Webots smoke launch: `WEBOTS_OFFSCREEN=1 ros2 launch open_mower_next sim.launch.py gui:=false mode:=fast` after sourcing ROS and `install/setup.bash`.
 - Direct ROS package launches use `open_mower_next`, e.g. `ros2 launch open_mower_next openmower.launch.py` or `ros2 launch open_mower_next sim.launch.py`.
 - Docs are isolated under `docs/`: `cd docs && npm ci && npm run docs:build`; dev server is `npm run docs:dev`.
 
@@ -37,3 +38,6 @@
 - `launch/rsp.launch.py` references package `open_mower_ros`, unlike the rest of the repo; verify before relying on `make rsp`.
 - If moving the docking plugin XML, update `src/docking_helper/plugins.xml`, `cmake/docking_helper.cmake`, `package.xml`, and the manual copy in `Dockerfile`.
 - The runtime Docker entrypoint creates an empty GeoJSON map when `OM_MAP_PATH` is missing; normal dev shells do not.
+- Webots is the only supported simulation backend; Gazebo assets and `ros_gz` bridge logic are legacy and should not be reintroduced.
+- Webots launch depends on `webots_ros2_driver`, `webots_ros2_control`, and a Webots binary available on the host.
+- If `webots_ros2_driver` auto-installs Webots, it usually lands in `~/.ros/webotsR2025a/webots`; export `WEBOTS_HOME` to that path or use `make sim`.

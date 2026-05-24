@@ -53,13 +53,6 @@
 
     </link>
 
-    <gazebo>
-        <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
-            <use_pose_vector_msg>true</use_pose_vector_msg>
-            <publish_nested_model_pose>true</publish_nested_model_pose>
-        </plugin>
-    </gazebo>
-
     <!-- BASE_FOOTPRINT LINK -->
 
     <joint name="base_footprint_joint" type="fixed">
@@ -99,10 +92,6 @@
         </xacro:inertial_box>
     </link>
 
-    <gazebo reference="chassis">
-        <material>Gazebo/Orange</material>
-    </gazebo>
-
     <!-- CHARGING PORT LINK -->
 
     <xacro:property name="charging_port_radius" value="0.01"/>
@@ -131,10 +120,6 @@
         </xacro:inertial_sphere>
     </link>
 
-    <gazebo reference="charging_port">
-        <material>Gazebo/Green</material>
-    </gazebo>
-
     <!-- LEFT WHEEL LINK -->
 
     <joint name="left_wheel_joint" type="continuous">
@@ -161,19 +146,6 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
     </link>
-
-    <gazebo reference="left_wheel">
-        <material>Gazebo/Blue</material>
-        <mu1 value="1.0"/>
-        <mu2 value="1.0"/>
-        <kp value="10000000.0" />
-        <kd value="1.0" />
-        <fdir1 value="1 0 0"/>
-        <minDepth>0.005</minDepth>
-        <maxVel>1.0</maxVel>
-        <slip1>0.0</slip1>
-        <slip2>0.0</slip2>
-    </gazebo>
 
     <!-- RIGHT WHEEL LINK -->
 
@@ -202,19 +174,6 @@
         </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="right_wheel">
-        <material>Gazebo/Blue</material>
-        <mu1 value="1.0"/>
-        <mu2 value="1.0"/>
-        <kp value="10000000.0" />
-        <kd value="1.0" />
-        <fdir1 value="1 0 0"/>
-        <minDepth>0.005</minDepth>
-        <maxVel>1.0</maxVel>
-        <slip1>0.0</slip1>
-        <slip2>0.0</slip2>
-    </gazebo>
-
     <!-- MOWER LINK -->
 
     <joint name="mower_joint" type="continuous">
@@ -241,12 +200,6 @@
         </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="mower">
-        <material>Gazebo/Red</material>
-        <mu1 value="0.5"/>
-        <mu2 value="0.5"/>
-    </gazebo>
-
     <!-- LEFT CASTER WHEEL LINK -->
 
     <!-- Caster Swivel -->
@@ -262,10 +215,6 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_sphere>
     </link>
-
-    <gazebo reference="left_caster_swivel">
-        <material>Gazebo/Black</material>
-    </gazebo>
 
     <joint name="left_caster_wheel_joint" type="continuous">
         <parent link="left_caster_swivel"/>
@@ -291,14 +240,6 @@
         </xacro:inertial_sphere>
     </link>
 
-    <gazebo reference="left_caster_wheel">
-        <material>Gazebo/Black</material>
-        <mu1 value="0.001"/>
-        <mu2 value="0.001"/>
-        <kp value="10000.0" />
-        <kd value="1.0" />
-    </gazebo>
-
     <!-- RIGHT CASTER WHEEL LINK -->
 
     <!-- Caster Swivel -->
@@ -314,10 +255,6 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_sphere>
     </link>
-
-    <gazebo reference="right_caster_swivel">
-        <material>Gazebo/Black</material>
-    </gazebo>
 
     <joint name="right_caster_wheel_joint" type="continuous">
         <parent link="right_caster_swivel"/>
@@ -342,21 +279,5 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_sphere>
     </link>
-
-    <gazebo reference="right_caster_wheel">
-        <material>Gazebo/Black</material>
-        <mu1 value="0.001"/>
-        <mu2 value="0.001"/>
-        <kp value="10000.0" />
-        <kd value="1.0" />
-    </gazebo>
-
-    <!-- Global collision settings -->
-    <gazebo>
-        <self_collide>0</self_collide>
-        <collision_detector>bullet</collision_detector>
-        <static>0</static>
-        <gravity>1</gravity>
-    </gazebo>
 
 </robot>

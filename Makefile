@@ -8,7 +8,7 @@ all: custom-deps deps build
 .PHONY: deps build
 
 deps:
-	rosdep install --from-paths ./ -i -y -r
+	rosdep install --from-paths . src/lib --ignore-src -i -y -r
 
 custom-deps:
 	sh utils/install-custom-deps.sh
@@ -24,9 +24,7 @@ build-release:
 	colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 sim:
-	source .devcontainer/default.env 
-	killall -9 ruby || true
-	ros2 launch launch/sim.launch.py
+	bash -lc 'if [ -z "$${WEBOTS_HOME}" ] && [ -d "$${HOME}/.ros/webotsR2025a/webots" ]; then export WEBOTS_HOME="$${HOME}/.ros/webotsR2025a/webots"; fi && if [ -z "$${DISPLAY}" ] && [ -z "$${WEBOTS_OFFSCREEN}" ]; then export WEBOTS_OFFSCREEN=1; fi && source /opt/ros/$${ROS_DISTRO:-jazzy}/setup.bash && source install/setup.bash && set -a && source .devcontainer/default.env && set +a && ros2 launch open_mower_next sim.launch.py'
 
 run:
 	ros2 launch launch/openmower.launch.py

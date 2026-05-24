@@ -7,18 +7,12 @@ bt_navigator:
     odom_topic: /odometry/filtered/map
     bt_loop_duration: 10
     default_server_timeout: 20
-    navigators: ["navigate_to_pose","navigate_through_poses", "navigate_complete_coverage"]
+    navigators: ["navigate_to_pose", "navigate_through_poses"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
     navigate_through_poses:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
-    navigate_complete_coverage:
-      plugin: "opennav_coverage_navigator/CoverageNavigator"
-    error_code_names: ["compute_path_error_code", "follow_path_error_code", "compute_coverage_error_code"]
-    plugin_lib_names:
-      - opennav_compute_complete_coverage_action_bt_node
-      - opennav_cancel_complete_coverage_action_bt_node
- 
+    error_code_names: ["compute_path_error_code", "follow_path_error_code"]
 
 controller_server:
   ros__parameters:

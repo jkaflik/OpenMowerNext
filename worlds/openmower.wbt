@@ -1,0 +1,58 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "../protos/OpenMower.proto"
+EXTERNPROTO "../protos/DockingStation.proto"
+
+WorldInfo {
+  title "OpenMowerNext Webots simulation"
+  basicTimeStep 10
+  coordinateSystem "ENU"
+  gpsCoordinateSystem "WGS84"
+  gpsReference -22.9 -43.2 0
+}
+Viewpoint {
+  orientation -0.330491 0.451759 0.828566 1.32217
+  position -2.3 -4.4 3.0
+  follow "openmower"
+}
+Background {
+  skyColor [
+    0.45 0.62 0.85
+  ]
+}
+DirectionalLight {
+  direction -0.4 -0.2 -1
+  intensity 1
+}
+Solid {
+  translation 0 0 -0.005
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.12 0.42 0.12
+        roughness 1
+        metalness 0
+      }
+      geometry DEF FLOOR_BOX Box {
+        size 20 20 0.01
+      }
+    }
+  ]
+  name "grass_floor"
+  boundingObject USE FLOOR_BOX
+}
+OpenMower {
+  translation 0 0 0.0925
+  rotation 0 0 1 2.0944
+  name "openmower"
+  controller "<extern>"
+}
+DockingStation {
+  translation 1.5 1.5 0
+  name "docking_station"
+}
+Robot {
+  name "Ros2Supervisor"
+  controller "<extern>"
+  supervisor TRUE
+}

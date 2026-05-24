@@ -2,44 +2,61 @@
 
 ## Overview
 
-OpenMowerNext incorporates a [Gazebo](http://gazebosim.org/) simulator and [ros_gz](https://github.com/gazebosim/ros_gz) integration.
+OpenMowerNext uses [Webots](https://cyberbotics.com/) as its simulation backend. Gazebo is no longer maintained in this repository.
 
-::: tip
-If you are not familiar with Gazebo, please refer to [Gazebo tutorials](http://gazebosim.org/tutorials).
-:::
+The simulation is built around Webots-native resources:
 
-::: warning
-This project uses Gazebo Fortress. Formerly known as Ignition Fortress.
-:::
+- `worlds/openmower.wbt` defines the world, clock source, GPS reference, robot and docking station.
+- `protos/OpenMower.proto` defines the robot model and stable Webots device names.
+- `protos/DockingStation.proto` defines the charging dock model.
+- `resource/openmower_webots.urdf` maps Webots devices to ROS 2 topics and `ros2_control`.
 
-![Robot simulation](assets/gazebo.jpg)
+## Getting Started
 
-## Getting started
-
-Run the following command to start the simulator:
+Install ROS dependencies first:
 
 ```bash
-ros2 launch openmower sim.launch.py
+make deps
 ```
 
+Run the simulator from the repository root:
 
-If run inside [devcontainer](devcontainer), Gazebo GUI will be displayed in a VNC web client. You can access it by opening [`http://localhost:12345`](http://localhost:12345) in your browser.
+```bash
+make sim
+```
 
-::: tip
-Learn more about [VNC client](devcontainer#detailed).
-:::
+For headless smoke tests on `lord.local`, run:
 
-It's possible to run the simulator with GUI on external host machine. I haven't done it myself since GUI is unstable on MacOS.
+```bash
+WEBOTS_OFFSCREEN=1 ros2 launch open_mower_next sim.launch.py gui:=false mode:=fast
+```
 
-## Current state
+If Webots was installed by `webots_ros2_driver`, set `WEBOTS_HOME=~/.ros/webotsR2025a/webots` or use `make sim`, which sets it automatically when that directory exists.
+Headless Webots also needs `xvfb` and `libxcb-cursor0` on Ubuntu.
 
-- :white_check_mark: Robot model
-- :white_check_mark: ros2_control controller
-- :white_check_mark: GPS sensor
-- :white_check_mark: IMU sensor
-- :white_check_mark: Emulate OpenMowerNext firmware (charging and battery) using [sim node](architecture/sim-node.md)
+The canonical development flow runs Webots and ROS 2 on `lord.local`. GUI access can be done through Webots streaming, browser/VNC, or SSH forwarding depending on the workstation setup.
 
-## World definition
+## ROS Contract
 
-<<< ../worlds/empty.sdf{xml}
+The simulator publishes or serves the same ROS-facing contract used by the rest of the stack:
 
+- `/clock` from `Ros2Supervisor`
+- `/gps/fix` from the Webots GPS device
+- `/imu/data_raw` from the Webots IMU plugin
+- `/diff_drive_base_controller/odom` from `diff_drive_controller`
+- `/power/charger_present`, `/power/charge_voltage`, and `/power` from `sim_node`
+
+Velocity commands still flow through `twist_mux` to `/diff_drive_base_controller/cmd_vel`.
+
+## Current State
+
+- :white_check_mark: Webots world and robot model
+- :white_check_mark: Webots ROS 2 driver launch
+- :white_check_mark: `webots_ros2_control` integration
+- :white_check_mark: GPS device mapping
+- :white_check_mark: IMU device mapping
+- :white_check_mark: Charging and battery emulation using [sim node](architecture/sim-node.md)
+
+## World Definition
+
+<<< ../worlds/openmower.wbt

@@ -9,14 +9,4 @@
     <link name="gps">
     </link>
 
-    <gazebo reference="gps">
-        <sensor name="gps" type="navsat">
-            <gz_frame_id>gps</gz_frame_id>
-            <always_on>1</always_on>
-            <update_rate>5</update_rate>
-            <topic>gps/fix</topic>
-        </sensor>
-
-        <material>Gazebo/Black</material>
-    </gazebo>
 </robot>

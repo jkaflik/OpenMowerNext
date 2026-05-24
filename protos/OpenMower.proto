@@ -1,0 +1,235 @@
+#VRML_SIM R2025a utf8
+
+PROTO OpenMower [
+  field SFVec3f    translation     0 0 0.0925
+  field SFRotation rotation        0 0 1 0
+  field SFString   name            "openmower"
+  field SFString   controller      "<extern>"
+  field MFString   controllerArgs  []
+  field SFBool     supervisor      FALSE
+  field SFBool     synchronization TRUE
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    controller IS controller
+    controllerArgs IS controllerArgs
+    supervisor IS supervisor
+    synchronization IS synchronization
+    children [
+      Pose {
+        translation 0.175 0 0.04
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 1 0.3 0.1
+              roughness 0.65
+              metalness 0
+            }
+            geometry DEF CHASSIS_BOX Box {
+              size 0.55 0.325 0.15
+            }
+          }
+        ]
+      }
+      Pose {
+        translation 0.45 0 0.04
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0 0.8 0
+              roughness 0.4
+              metalness 0
+            }
+            geometry Sphere {
+              radius 0.01
+            }
+          }
+        ]
+      }
+      GPS {
+        translation 0.32 0 0.1
+        name "gps"
+      }
+      InertialUnit {
+        name "inertial_unit"
+      }
+      Gyro {
+        name "gyro"
+      }
+      Accelerometer {
+        name "accelerometer"
+      }
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 1 0
+          anchor 0 0.16 0
+        }
+        device [
+          RotationalMotor {
+            name "left_wheel_joint"
+            maxVelocity 12
+            maxTorque 40
+          }
+          PositionSensor {
+            name "left_wheel_joint_sensor"
+          }
+        ]
+        endPoint Solid {
+          translation 0 0.16 0
+          rotation 1 0 0 1.570796
+          children [
+            Shape {
+              appearance DEF WHEEL_APPEARANCE PBRAppearance {
+                baseColor 0.05 0.05 0.55
+                roughness 0.9
+                metalness 0
+              }
+              geometry DEF WHEEL_CYLINDER Cylinder {
+                height 0.04
+                radius 0.0925
+              }
+            }
+          ]
+          name "left_wheel"
+          boundingObject USE WHEEL_CYLINDER
+          physics Physics {
+            density -1
+            mass 0.2
+          }
+        }
+      }
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 1 0
+          anchor 0 -0.16 0
+        }
+        device [
+          RotationalMotor {
+            name "right_wheel_joint"
+            maxVelocity 12
+            maxTorque 40
+          }
+          PositionSensor {
+            name "right_wheel_joint_sensor"
+          }
+        ]
+        endPoint Solid {
+          translation 0 -0.16 0
+          rotation 1 0 0 1.570796
+          children [
+            Shape {
+              appearance USE WHEEL_APPEARANCE
+              geometry USE WHEEL_CYLINDER
+            }
+          ]
+          name "right_wheel"
+          boundingObject USE WHEEL_CYLINDER
+          physics Physics {
+            density -1
+            mass 0.2
+          }
+        }
+      }
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 0 1
+          anchor 0.18 0 -0.05
+        }
+        device [
+          RotationalMotor {
+            name "mower_joint"
+            maxVelocity 80
+            maxTorque 2
+          }
+          PositionSensor {
+            name "mower_joint_sensor"
+          }
+        ]
+        endPoint Solid {
+          translation 0.18 0 -0.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 1 0 0
+                roughness 0.55
+                metalness 0
+              }
+              geometry DEF MOWER_CYLINDER Cylinder {
+                height 0.01
+                radius 0.065
+              }
+            }
+          ]
+          name "mower"
+          boundingObject USE MOWER_CYLINDER
+          physics Physics {
+            density -1
+            mass 0.2
+          }
+        }
+      }
+      BallJoint {
+        jointParameters BallJointParameters {
+          anchor 0.35 0.1 -0.0425
+        }
+        endPoint Solid {
+          translation 0.35 0.1 -0.0425
+          children [
+            Shape {
+              appearance DEF CASTER_APPEARANCE PBRAppearance {
+                baseColor 0.01 0.01 0.01
+                roughness 0.9
+                metalness 0
+              }
+              geometry DEF CASTER_SPHERE Sphere {
+                radius 0.05
+              }
+            }
+          ]
+          name "left_caster_wheel"
+          boundingObject USE CASTER_SPHERE
+          physics Physics {
+            density -1
+            mass 0.05
+          }
+        }
+      }
+      BallJoint {
+        jointParameters BallJointParameters {
+          anchor 0.35 -0.1 -0.0425
+        }
+        endPoint Solid {
+          translation 0.35 -0.1 -0.0425
+          children [
+            Shape {
+              appearance USE CASTER_APPEARANCE
+              geometry USE CASTER_SPHERE
+            }
+          ]
+          name "right_caster_wheel"
+          boundingObject USE CASTER_SPHERE
+          physics Physics {
+            density -1
+            mass 0.05
+          }
+        }
+      }
+    ]
+    boundingObject Pose {
+      translation 0.175 0 0.04
+      children [
+        USE CHASSIS_BOX
+      ]
+    }
+    physics Physics {
+      density -1
+      mass 10
+      centerOfMass [
+        0.175 0 0.04
+      ]
+    }
+  }
+}
