@@ -23,6 +23,7 @@
 - Hardware launch from repo root: `make run`.
 - Sim launch from repo root: `make sim`; it sources ROS, the installed workspace, `.devcontainer/default.env`, then launches `open_mower_next sim.launch.py` with Webots.
 - Headless Webots smoke launch: `WEBOTS_OFFSCREEN=1 ros2 launch open_mower_next sim.launch.py gui:=false mode:=fast` after sourcing ROS and `install/setup.bash`.
+- ROS MCP rosbridge foreground launch: `make rosbridge`; user service setup: `make rosbridge-service-enable`.
 - Direct ROS package launches use `open_mower_next`, e.g. `ros2 launch open_mower_next openmower.launch.py` or `ros2 launch open_mower_next sim.launch.py`.
 - Docs are isolated under `docs/`: `cd docs && npm ci && npm run docs:build`; dev server is `npm run docs:dev`.
 
@@ -43,3 +44,5 @@
 - Webots is the only supported simulation backend; Gazebo assets and `ros_gz` bridge logic are legacy and should not be reintroduced.
 - Webots launch depends on `webots_ros2_driver`, `webots_ros2_control`, and a Webots binary available on the host.
 - If `webots_ros2_driver` auto-installs Webots, it usually lands in `~/.ros/webotsR2025a/webots`; export `WEBOTS_HOME` to that path or use `make sim`.
+- Project OpenCode config starts `ros-mcp` with `uvx`; restart OpenCode after config changes or after installing `uv`.
+- Rosbridge for MCP binds to `127.0.0.1:9090` by default; prefer SSH tunneling over binding it to the LAN.

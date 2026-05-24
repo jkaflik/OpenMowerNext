@@ -68,6 +68,7 @@
 
   <exec_depend>foxglove_msgs</exec_depend>
   <exec_depend>foxglove_bridge</exec_depend>
+  <exec_depend>rosbridge_server</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>

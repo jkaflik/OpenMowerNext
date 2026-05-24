@@ -25,7 +25,7 @@ Run the simulator from the repository root:
 make sim
 ```
 
-For headless smoke tests on `lord.local`, run:
+For headless smoke tests on the development host, run:
 
 ```bash
 WEBOTS_OFFSCREEN=1 ros2 launch open_mower_next sim.launch.py gui:=false mode:=fast
@@ -34,7 +34,7 @@ WEBOTS_OFFSCREEN=1 ros2 launch open_mower_next sim.launch.py gui:=false mode:=fa
 If Webots was installed by `webots_ros2_driver`, set `WEBOTS_HOME=~/.ros/webotsR2025a/webots` or use `make sim`, which sets it automatically when that directory exists.
 Headless Webots also needs `xvfb` and `libxcb-cursor0` on Ubuntu.
 
-The canonical development flow runs Webots and ROS 2 on `lord.local`. GUI access can be done through Webots streaming, browser/VNC, or SSH forwarding depending on the workstation setup.
+The canonical development flow runs Webots and ROS 2 on the development host. GUI access can be done through Webots streaming, browser/VNC, or SSH forwarding depending on the workstation setup.
 
 ## ROS Contract
 

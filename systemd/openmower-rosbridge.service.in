@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenMowerNext rosbridge websocket
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=@WORKSPACE@
+Environment=ROS_DISTRO=@ROS_DISTRO@
+Environment=ROSBRIDGE_ADDRESS=@ROSBRIDGE_ADDRESS@
+Environment=ROSBRIDGE_PORT=@ROSBRIDGE_PORT@
+ExecStart=/bin/bash @WORKSPACE@/utils/run-rosbridge.sh
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

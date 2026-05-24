@@ -58,6 +58,7 @@ export default withMermaid({
             },
             { text: 'Visualisation', link: '/visualisation' },
             { text: 'Simulator', link: '/simulator' },
+            { text: 'ROS MCP', link: '/ros-mcp' },
         ],
       },
     ],

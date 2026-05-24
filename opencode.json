@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "ros-mcp": {
+      "type": "local",
+      "command": ["uvx", "ros-mcp", "--transport=stdio"],
+      "enabled": true,
+      "timeout": 30000
+    }
+  }
+}
