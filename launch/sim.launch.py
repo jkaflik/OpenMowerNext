@@ -9,7 +9,6 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     RegisterEventHandler,
-    TimerAction,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
@@ -120,11 +119,9 @@ def launch_setup(context, *args, **kwargs):
         arguments=["mower_controller"] + controller_manager_timeout,
         parameters=[{"use_sim_time": use_sim_time}],
     )
-    controller_spawners = [load_joint_state_controller, load_diff_controller, load_mower_controller]
-
     wait_for_webots_driver = WaitForControllerConnection(
         target_driver=webots_driver,
-        nodes_to_start=controller_spawners,
+        nodes_to_start=[load_joint_state_controller],
     )
 
     # Simulation helper node publishes the hardware-facing power topics.
@@ -141,6 +138,7 @@ def launch_setup(context, *args, **kwargs):
                 "docking_station_contact_y": 1.5,
                 "docking_station_contact_z": 0.06,
                 "docking_station_contact_yaw": 0.0,
+                "docking_detection_tolerance_x": 0.30,
             }
         ],
     )
@@ -150,6 +148,10 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             "use_sim_time": use_sim_time,
             "autostart": "true",
+            "gnss_base_noise_xy": "0.05",
+            "gnss_track_heading_min_speed": "0.10",
+            "gnss_track_heading_min_dist": "1.0",
+            "gnss_heading_observable_distance": "1.0",
         }.items(),
     )
 
@@ -161,6 +163,20 @@ def launch_setup(context, *args, **kwargs):
             "params_file": os.path.join(share_directory, "config", "nav2_params.yaml"),
         }.items(),
     )
+
+    navigation_readiness = Node(
+        package="open_mower_next",
+        executable="navigation_readiness_node",
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time, "timeout_seconds": 120.0}],
+    )
+
+    def start_nav2_or_shutdown(event, context):
+        if context.is_shutdown:
+            return []
+        if event.returncode == 0:
+            return [nav2]
+        return [EmitEvent(event=Shutdown(reason="Navigation prerequisites timed out"))]
 
     foxglove_bridge = IncludeLaunchDescription(
         XMLLaunchDescriptionSource(
@@ -182,9 +198,27 @@ def launch_setup(context, *args, **kwargs):
         twist_mux,
         webots_driver,
         wait_for_webots_driver,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_controller,
+                on_exit=[load_diff_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_diff_controller,
+                on_exit=[load_mower_controller],
+            )
+        ),
         sim_node,
         localization,
-        TimerAction(period=8.0, actions=[nav2]),
+        navigation_readiness,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=navigation_readiness,
+                on_exit=start_nav2_or_shutdown,
+            )
+        ),
         foxglove_bridge,
         RegisterEventHandler(
             event_handler=OnProcessExit(

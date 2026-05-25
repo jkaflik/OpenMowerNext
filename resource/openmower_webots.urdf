@@ -7,7 +7,7 @@
         <alwaysOn>true</alwaysOn>
         <updateRate>5</updateRate>
         <topicName>/gps/fix</topicName>
-        <frameName>gps</frameName>
+        <frameName>gnss_link</frameName>
       </ros>
     </device>
 
@@ -17,7 +17,6 @@
       <updateRate>50</updateRate>
       <topicName>/imu/data_raw</topicName>
       <frameName>imu</frameName>
-      <inertialUnitName>inertial_unit</inertialUnitName>
       <gyroName>gyro</gyroName>
       <accelerometerName>accelerometer</accelerometerName>
     </plugin>
