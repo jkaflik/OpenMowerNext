@@ -28,6 +28,7 @@
   <depend>ament_index_cpp</depend>
   <depend>visualization_msgs</depend>
   <depend>geographiclib</depend>
+  <depend>geographic_msgs</depend>
   <depend>opennav_docking</depend>
   <depend>sensor_msgs</depend>
   <depend>fields2cover</depend>
@@ -64,7 +65,8 @@
   <exec_depend>ntrip_client</exec_depend>
 
   <exec_depend>navigation2</exec_depend>
-  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>fusioncore_ros</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
 
   <exec_depend>foxglove_msgs</exec_depend>
   <exec_depend>foxglove_bridge</exec_depend>
@@ -75,7 +77,6 @@
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>action_msgs</test_depend>
-  <test_depend>lifecycle_msgs</test_depend>
   <test_depend>rclpy</test_depend>
   <test_depend>rosgraph_msgs</test_depend>
 

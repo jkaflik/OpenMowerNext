@@ -1,0 +1,66 @@
+fusioncore:
+  ros__parameters:
+    base_frame: base_link
+    odom_frame: odom
+    publish_rate: 50.0
+    publish.force_2d: true
+    publish.tf: true
+
+    imu.topic: /imu/data
+    imu.frame_id: imu
+    imu.has_magnetometer: false
+    imu.gyro_noise: 0.005
+    imu.accel_noise: 0.1
+    imu.remove_gravitational_acceleration: false
+
+    encoder.vel_noise: 0.05
+    encoder.yaw_noise: 0.02
+
+    gnss.base_noise_xy: 0.5
+    gnss.base_noise_z: 1.0
+    gnss.max_hdop: 4.0
+    gnss.min_satellites: 4
+    # The current ublox_f9p driver publishes NavSatFix STATUS_FIX for 3D fixes,
+    # so requiring RTK-specific fix types would starve FusionCore.
+    gnss.min_fix_type: 1
+    gnss.velocity_topic: /gps/odom
+    gnss.lever_arm_x: 0.32
+    gnss.lever_arm_y: 0.0
+    gnss.lever_arm_z: 0.1
+
+    outlier_rejection: true
+    outlier_threshold_gnss: 16.27
+    outlier_threshold_imu: 15.09
+    outlier_threshold_enc: 11.34
+    outlier_threshold_hdg: 10.83
+
+    init.stationary_window: 0.0
+    init.wait_for_all_sensors: true
+    init.sensor_wait_timeout: 10.0
+
+    zupt.enabled: true
+    zupt.velocity_threshold: 0.05
+    zupt.angular_threshold: 0.05
+    zupt.noise_sigma: 0.01
+
+    adaptive.imu: true
+    adaptive.encoder: true
+    adaptive.gnss: true
+    adaptive.window: 50
+    adaptive.alpha: 0.01
+
+    ukf.q_position: 0.01
+    ukf.q_orientation: 1.0e-9
+    ukf.q_velocity: 0.1
+    ukf.q_angular_vel: 0.1
+    ukf.q_acceleration: 1.0
+    ukf.q_gyro_bias: 1.0e-5
+    ukf.q_accel_bias: 1.0e-5
+
+    input.gnss_crs: EPSG:4326
+    output.crs: EPSG:4978
+    output.convert_to_enu_at_reference: true
+    reference.use_first_fix: false
+    reference.x: 0.0
+    reference.y: 0.0
+    reference.z: 0.0

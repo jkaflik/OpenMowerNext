@@ -9,6 +9,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     RegisterEventHandler,
+    TimerAction,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
@@ -79,7 +80,7 @@ def launch_setup(context, *args, **kwargs):
         stream=webots_stream,
         port=webots_port,
     )
-    webots_supervisor = Ros2SupervisorLauncher(respawn=False)
+    webots_supervisor = Ros2SupervisorLauncher(respawn=False, port=webots_port)
 
     controller_params_file = os.path.join(share_directory, "config", "controllers.yaml")
     webots_robot_description = os.path.join(share_directory, "resource", "openmower_webots.urdf")
@@ -94,6 +95,7 @@ def launch_setup(context, *args, **kwargs):
             controller_params_file,
         ],
         respawn=False,
+        port=webots_port,
     )
 
     controller_manager_timeout = ["--controller-manager-timeout", "50"]
@@ -182,7 +184,7 @@ def launch_setup(context, *args, **kwargs):
         wait_for_webots_driver,
         sim_node,
         localization,
-        nav2,
+        TimerAction(period=8.0, actions=[nav2]),
         foxglove_bridge,
         RegisterEventHandler(
             event_handler=OnProcessExit(

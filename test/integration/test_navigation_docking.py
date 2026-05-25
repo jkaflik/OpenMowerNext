@@ -22,6 +22,7 @@ from rclpy.parameter import Parameter
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Bool, Float32
 
 
@@ -62,6 +63,7 @@ def prepare_env() -> dict[str, str]:
     root = repo_root()
     env = os.environ.copy()
     env["ROS_DOMAIN_ID"] = str(100 + (os.getpid() % 100))
+    env["WEBOTS_PORT"] = str(13000 + (os.getpid() % 1000))
     env["WEBOTS_OFFSCREEN"] = "1"
     env["OM_DATUM_LAT"] = "-22.9"
     env["OM_DATUM_LONG"] = "-43.2"
@@ -89,6 +91,7 @@ def start_simulation(log_path: Path, env: dict[str, str]):
             "gui:=false",
             "mode:=realtime",
             "enable_foxglove:=false",
+            f"webots_port:={env['WEBOTS_PORT']}",
         ],
         stdout=log_file,
         stderr=subprocess.STDOUT,
@@ -184,7 +187,7 @@ class NavigationDockingTestNode(Node):
         self.map_grid_received = False
         self.mowing_map = None
         self.diff_drive_odom_received = False
-        self.gps_odom_received = False
+        self.gps_fix_received = False
         self.filtered_odom_after_gps = False
         self.filtered_odom = None
         self.closest_navigation_goal_distance = math.inf
@@ -208,8 +211,8 @@ class NavigationDockingTestNode(Node):
         self.create_subscription(OccupancyGrid, "/map_grid", self._map_grid_callback, map_qos)
         self.create_subscription(Map, "/mowing_map", self._mowing_map_callback, map_qos)
         self.create_subscription(Odometry, "/diff_drive_base_controller/odom", self._diff_odom_callback, 10)
-        self.create_subscription(Odometry, "/odometry/gps", self._gps_odom_callback, 10)
-        self.create_subscription(Odometry, "/odometry/filtered/map", self._odom_callback, 10)
+        self.create_subscription(NavSatFix, "/gps/fix", self._gps_fix_callback, 10)
+        self.create_subscription(Odometry, "/fusion/odom", self._odom_callback, 10)
         self.create_subscription(Bool, "/power/charger_present", self._charger_callback, 10)
         self.create_subscription(Float32, "/power/charge_voltage", self._charge_voltage_callback, 10)
 
@@ -225,15 +228,15 @@ class NavigationDockingTestNode(Node):
     def _diff_odom_callback(self, _msg: Odometry) -> None:
         self.diff_drive_odom_received = True
 
-    def _gps_odom_callback(self, _msg: Odometry) -> None:
-        if not self.gps_odom_received:
+    def _gps_fix_callback(self, _msg: NavSatFix) -> None:
+        if not self.gps_fix_received:
             self.filtered_odom_after_gps = False
             self.bounded_localization_since = None
-        self.gps_odom_received = True
+        self.gps_fix_received = True
 
     def _odom_callback(self, msg: Odometry) -> None:
         self.filtered_odom = msg
-        if self.gps_odom_received:
+        if self.gps_fix_received:
             self.filtered_odom_after_gps = True
         position = msg.pose.pose.position
         distance = math.hypot(position.x - NAVIGATION_GOAL_X, position.y - NAVIGATION_GOAL_Y)
@@ -252,7 +255,7 @@ class NavigationDockingTestNode(Node):
             return False
         if not self.diff_drive_odom_received:
             return False
-        if not self.gps_odom_received:
+        if not self.gps_fix_received:
             return False
         if self.filtered_odom is None or not is_finite_odom(self.filtered_odom):
             return False
@@ -324,7 +327,7 @@ class NavigationDockingTestNode(Node):
             f"dock_count={dock_count}, "
             f"map_dock={map_dock}, "
             f"diff_drive_odom={self.diff_drive_odom_received}, "
-            f"gps_odom={self.gps_odom_received}, "
+            f"gps_fix={self.gps_fix_received}, "
             f"filtered_odom_after_gps={self.filtered_odom_after_gps}, "
             f"filtered_odom={odom_ready}, "
             f"filtered_pose={odom_pose}, "
@@ -569,6 +572,7 @@ def send_docking_goal(node: NavigationDockingTestNode, process, log_path: Path):
 def test_navigate_to_point_then_dock(tmp_path):
     log_path = tmp_path / "navigation_docking.log"
     env = prepare_env()
+    previous_ros_domain_id = os.environ.get("ROS_DOMAIN_ID")
     os.environ["ROS_DOMAIN_ID"] = env["ROS_DOMAIN_ID"]
 
     process, log_file = start_simulation(log_path, env)
@@ -605,5 +609,9 @@ def test_navigate_to_point_then_dock(tmp_path):
         rclpy.shutdown()
         stop_simulation(process)
         log_file.close()
+        if previous_ros_domain_id is None:
+            os.environ.pop("ROS_DOMAIN_ID", None)
+        else:
+            os.environ["ROS_DOMAIN_ID"] = previous_ros_domain_id
 
     assert_no_launch_failures(log_path)

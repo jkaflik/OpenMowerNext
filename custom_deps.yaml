@@ -10,7 +10,7 @@ repositories:
   ublox_f9p:
     type: git
     url: https://github.com/jkaflik/ublox_f9p
-    version: main
+    version: remove-robot-localization-dependency
   ntrip_client:
     type: git
     url: https://github.com/LORD-MicroStrain/ntrip_client
@@ -19,3 +19,7 @@ repositories:
     type: git
     url: https://github.com/Fields2Cover/Fields2Cover.git
     version: 0ce7fcce82f3f79f773699448769bcd679c739bc
+  fusioncore:
+    type: git
+    url: https://github.com/manankharwar/fusioncore.git
+    version: v0.2.4

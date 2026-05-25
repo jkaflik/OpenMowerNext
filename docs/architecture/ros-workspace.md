@@ -16,7 +16,7 @@ There are few biggest chunks to mention:
 
 - [ros2_control](https://control.ros.org/master/index.html) - differential drive controller, but also a hardware layer provider
 - [nav2](https://navigation.ros.org/) - navigation stack
-- [robot_localization](http://docs.ros.org/en/noetic/api/robot_localization/html/index.html) - fuse sensors data to get accurate pose estimation
+- [FusionCore](https://github.com/manankharwar/fusioncore) - fuses IMU, wheel odometry and GPS into `/fusion/odom`
 - [NTRIP client](https://github.com/LORD-MicroStrain/ntrip_client) - a ROS node to connect to NTRIP caster and get RTK corrections
 - [Foxglove bridge](https://foxglove.dev/docs/studio/connection/using-foxglove-bridge) - a ROS node exposing websocket connection to Foxglove Studio. See instructions [here](../visualisation). It can be used for custom Web UIs as well.
 
