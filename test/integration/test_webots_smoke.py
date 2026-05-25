@@ -19,6 +19,7 @@ REQUIRED_TOPICS = {
     "/gps/fix",
     "/imu/data_raw",
     "/diff_drive_base_controller/odom",
+    "/fusion/odom",
     "/power",
     "/power/charge_voltage",
     "/power/charger_present",
@@ -42,6 +43,8 @@ def repo_root() -> Path:
 def prepare_env() -> dict[str, str]:
     env = os.environ.copy()
     env.setdefault("WEBOTS_OFFSCREEN", "1")
+    env.setdefault("WEBOTS_PORT", str(12000 + (os.getpid() % 1000)))
+    env.setdefault("ROS_DOMAIN_ID", str(50 + (os.getpid() % 50)))
 
     if not env.get("WEBOTS_HOME"):
         default_webots_home = Path.home() / ".ros" / "webotsR2025a" / "webots"
@@ -74,6 +77,7 @@ def start_simulation(log_path: Path, env: dict[str, str]):
             "sim.launch.py",
             "gui:=false",
             "mode:=fast",
+            f"webots_port:={env['WEBOTS_PORT']}",
         ],
         stdout=log_file,
         stderr=subprocess.STDOUT,
@@ -129,6 +133,7 @@ def wait_for_topics_and_motion() -> None:
     node.create_subscription(Clock, "/clock", mark("/clock"), 10)
     node.create_subscription(NavSatFix, "/gps/fix", mark("/gps/fix"), 10)
     node.create_subscription(Imu, "/imu/data_raw", mark("/imu/data_raw"), 10)
+    node.create_subscription(Odometry, "/fusion/odom", mark("/fusion/odom"), 10)
     node.create_subscription(Bool, "/power/charger_present", mark("/power/charger_present"), 10)
     node.create_subscription(Float32, "/power/charge_voltage", mark("/power/charge_voltage"), 10)
     node.create_subscription(BatteryState, "/power", mark("/power"), 10)
@@ -181,7 +186,10 @@ def wait_for_topics_and_motion() -> None:
 
 def test_webots_smoke(tmp_path):
     log_path = tmp_path / "webots_smoke.log"
-    process, log_file = start_simulation(log_path, prepare_env())
+    env = prepare_env()
+    previous_ros_domain_id = os.environ.get("ROS_DOMAIN_ID")
+    os.environ["ROS_DOMAIN_ID"] = env["ROS_DOMAIN_ID"]
+    process, log_file = start_simulation(log_path, env)
 
     try:
         wait_for_topics_and_motion()
@@ -190,3 +198,7 @@ def test_webots_smoke(tmp_path):
     finally:
         stop_simulation(process)
         log_file.close()
+        if previous_ros_domain_id is None:
+            os.environ.pop("ROS_DOMAIN_ID", None)
+        else:
+            os.environ["ROS_DOMAIN_ID"] = previous_ros_domain_id

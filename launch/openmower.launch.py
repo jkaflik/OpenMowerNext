@@ -3,7 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler, ExecuteProcess
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, ExecuteProcess, TimerAction
 from launch.event_handlers import OnProcessStart, OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -111,12 +111,17 @@ def generate_launch_description():
             }.items(),
         ),
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([share_directory, '/launch/nav2.launch.py']),
-            launch_arguments={
-                'use_sim_time': 'false',
-                'autostart': 'true',
-            }.items(),
+        TimerAction(
+            period=8.0,
+            actions=[
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource([share_directory, '/launch/nav2.launch.py']),
+                    launch_arguments={
+                        'use_sim_time': 'false',
+                        'autostart': 'true',
+                    }.items(),
+                ),
+            ],
         ),
 
         IncludeLaunchDescription(
