@@ -31,6 +31,14 @@ fusioncore:
     gnss.track_heading_max_yaw_rate: 0.3
     gnss.track_heading_min_dist: 5.0
     gnss.heading_observable_distance: 5.0
+    gnss.rotation_heading_enabled: true
+    gnss.rotation_heading_min_yaw_delta: 1.0
+    gnss.rotation_heading_min_arc_baseline: 0.25
+    gnss.rotation_heading_max_base_translation: 0.20
+    gnss.rotation_heading_max_sigma: 0.4
+    gnss.rotation_heading_sigma_floor: 0.05
+    gnss.rotation_heading_delta_yaw_sigma: 0.03
+    gnss.rotation_heading_max_window_s: 10.0
 
     outlier_rejection: true
     outlier_threshold_gnss: 16.27
