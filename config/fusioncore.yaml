@@ -27,6 +27,10 @@ fusioncore:
     gnss.lever_arm_x: 0.32
     gnss.lever_arm_y: 0.0
     gnss.lever_arm_z: 0.1
+    gnss.track_heading_min_speed: 0.2
+    gnss.track_heading_max_yaw_rate: 0.3
+    gnss.track_heading_min_dist: 5.0
+    gnss.heading_observable_distance: 5.0
 
     outlier_rejection: true
     outlier_threshold_gnss: 16.27

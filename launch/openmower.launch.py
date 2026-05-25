@@ -3,8 +3,9 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler, ExecuteProcess, TimerAction
+from launch.actions import EmitEvent, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
 from launch.event_handlers import OnProcessStart, OnProcessExit
+from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.actions import Node
@@ -72,6 +73,28 @@ def generate_launch_description():
         output='screen'
     )
 
+    navigation_readiness = Node(
+        package='open_mower_next',
+        executable='navigation_readiness_node',
+        output='screen',
+        parameters=[{'use_sim_time': False, 'timeout_seconds': 120.0}],
+    )
+
+    nav2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([share_directory, '/launch/nav2.launch.py']),
+        launch_arguments={
+            'use_sim_time': 'false',
+            'autostart': 'true',
+        }.items(),
+    )
+
+    def start_nav2_or_shutdown(event, context):
+        if context.is_shutdown:
+            return []
+        if event.returncode == 0:
+            return [nav2]
+        return [EmitEvent(event=Shutdown(reason='Navigation prerequisites timed out'))]
+
     # Launch them all!
     return LaunchDescription([
         node_robot_state_publisher,
@@ -94,7 +117,7 @@ def generate_launch_description():
 
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=load_joint_state_controller,
+                target_action=load_diff_controller,
                 on_exit=[load_mower_controller],
             )
         ),
@@ -111,17 +134,13 @@ def generate_launch_description():
             }.items(),
         ),
 
-        TimerAction(
-            period=8.0,
-            actions=[
-                IncludeLaunchDescription(
-                    PythonLaunchDescriptionSource([share_directory, '/launch/nav2.launch.py']),
-                    launch_arguments={
-                        'use_sim_time': 'false',
-                        'autostart': 'true',
-                    }.items(),
-                ),
-            ],
+        navigation_readiness,
+
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=navigation_readiness,
+                on_exit=start_nav2_or_shutdown,
+            )
         ),
 
         IncludeLaunchDescription(

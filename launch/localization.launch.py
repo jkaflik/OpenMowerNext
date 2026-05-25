@@ -15,6 +15,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import LifecycleNode, Node
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
+from launch_ros.parameter_descriptions import ParameterValue
 from lifecycle_msgs.msg import Transition
 
 
@@ -45,6 +46,10 @@ def generate_launch_description():
     package_path = get_package_share_directory("open_mower_next")
 
     use_sim_time = LaunchConfiguration("use_sim_time")
+    gnss_base_noise_xy = LaunchConfiguration("gnss_base_noise_xy")
+    gnss_track_heading_min_speed = LaunchConfiguration("gnss_track_heading_min_speed")
+    gnss_track_heading_min_dist = LaunchConfiguration("gnss_track_heading_min_dist")
+    gnss_heading_observable_distance = LaunchConfiguration("gnss_heading_observable_distance")
     datum_lat = require_env_float("OM_DATUM_LAT")
     datum_lon = require_env_float("OM_DATUM_LONG")
     datum_x, datum_y, datum_z = wgs84_to_ecef(datum_lat, datum_lon)
@@ -67,6 +72,16 @@ def generate_launch_description():
                 "reference.x": datum_x,
                 "reference.y": datum_y,
                 "reference.z": datum_z,
+                "gnss.base_noise_xy": ParameterValue(gnss_base_noise_xy, value_type=float),
+                "gnss.track_heading_min_speed": ParameterValue(
+                    gnss_track_heading_min_speed, value_type=float
+                ),
+                "gnss.track_heading_min_dist": ParameterValue(
+                    gnss_track_heading_min_dist, value_type=float
+                ),
+                "gnss.heading_observable_distance": ParameterValue(
+                    gnss_heading_observable_distance, value_type=float
+                ),
             },
         ],
         remappings=[
@@ -125,6 +140,26 @@ def generate_launch_description():
                 "params_file",
                 default_value=os.path.join(package_path, "config", "nav2_params.yaml"),
                 description="Full path to the ROS2 parameters file to use",
+            ),
+            DeclareLaunchArgument(
+                "gnss_base_noise_xy",
+                default_value="0.5",
+                description="GNSS horizontal base noise for FusionCore",
+            ),
+            DeclareLaunchArgument(
+                "gnss_track_heading_min_speed",
+                default_value="0.2",
+                description="Minimum speed to count GNSS track motion for heading observability",
+            ),
+            DeclareLaunchArgument(
+                "gnss_track_heading_min_dist",
+                default_value="5.0",
+                description="GNSS track baseline before fusing track heading",
+            ),
+            DeclareLaunchArgument(
+                "gnss_heading_observable_distance",
+                default_value="5.0",
+                description="Valid GNSS track distance before enabling GNSS lever-arm correction",
             ),
             Node(
                 package="tf2_ros",

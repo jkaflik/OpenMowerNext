@@ -17,6 +17,7 @@ from std_msgs.msg import Bool, Float32
 REQUIRED_TOPICS = {
     "/clock",
     "/gps/fix",
+    "/gps/odom",
     "/imu/data_raw",
     "/diff_drive_base_controller/odom",
     "/fusion/odom",
@@ -126,12 +127,19 @@ def wait_for_topics_and_motion() -> None:
     node = rclpy.create_node("webots_smoke_test")
     received = set()
     poses = []
+    gps_statuses = []
 
     def mark(name):
         return lambda _: received.add(name)
 
     node.create_subscription(Clock, "/clock", mark("/clock"), 10)
-    node.create_subscription(NavSatFix, "/gps/fix", mark("/gps/fix"), 10)
+    node.create_subscription(
+        NavSatFix,
+        "/gps/fix",
+        lambda msg: (received.add("/gps/fix"), gps_statuses.append(msg.status.status)),
+        10,
+    )
+    node.create_subscription(Odometry, "/gps/odom", mark("/gps/odom"), 10)
     node.create_subscription(Imu, "/imu/data_raw", mark("/imu/data_raw"), 10)
     node.create_subscription(Odometry, "/fusion/odom", mark("/fusion/odom"), 10)
     node.create_subscription(Bool, "/power/charger_present", mark("/power/charger_present"), 10)
@@ -155,6 +163,7 @@ def wait_for_topics_and_motion() -> None:
 
         missing = sorted(REQUIRED_TOPICS - received)
         assert not missing, f"Missing expected simulation topics: {missing}"
+        assert gps_statuses[-1] >= 0, f"Expected valid GPS status, got {gps_statuses[-1]}"
         assert poses, "No odometry received before motion command"
 
         start = poses[-1]

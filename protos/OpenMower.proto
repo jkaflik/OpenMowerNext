@@ -53,9 +53,6 @@ PROTO OpenMower [
         translation 0.32 0 0.1
         name "gps"
       }
-      InertialUnit {
-        name "inertial_unit"
-      }
       Gyro {
         name "gyro"
       }

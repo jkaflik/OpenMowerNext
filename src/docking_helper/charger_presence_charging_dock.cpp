@@ -85,6 +85,7 @@ geometry_msgs::msg::PoseStamped ChargerPresenceChargingDock::getStagingPose(cons
 
 bool ChargerPresenceChargingDock::getRefinedPose(geometry_msgs::msg::PoseStamped& pose, std::string id)
 {
+  (void)id;
   // just publish to a topic
   dock_pose_pub_->publish(pose);
   return true;
