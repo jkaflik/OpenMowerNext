@@ -10,7 +10,7 @@ repositories:
   ublox_f9p:
     type: git
     url: https://github.com/jkaflik/ublox_f9p
-    version: remove-robot-localization-dependency
+    version: fix/parser-rtk-semantics
   ntrip_client:
     type: git
     url: https://github.com/LORD-MicroStrain/ntrip_client

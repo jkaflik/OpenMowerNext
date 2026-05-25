@@ -20,8 +20,8 @@ fusioncore:
     gnss.base_noise_z: 1.0
     gnss.max_hdop: 4.0
     gnss.min_satellites: 4
-    # The current ublox_f9p driver publishes NavSatFix STATUS_FIX for 3D fixes,
-    # so requiring RTK-specific fix types would starve FusionCore.
+    # ublox_f9p maps RTK fixed to GBAS and RTK float/differential to SBAS,
+    # but allow standalone GNSS so localization can start before corrections converge.
     gnss.min_fix_type: 1
     gnss.velocity_topic: /gps/odom
     gnss.lever_arm_x: 0.32
