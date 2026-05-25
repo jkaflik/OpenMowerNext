@@ -8,5 +8,6 @@ ublox_f9p:
     config:
       enabled: true
       measurement_frequency: 5
+      uart_output_rate: 5
     publish:
       motion_odometry: true

@@ -1,14 +1,10 @@
 import os
-import yaml
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument
 
 from ament_index_python.packages import get_package_share_directory
+
+
 def generate_launch_description():
     nodes = [
         Node(
@@ -35,6 +31,7 @@ def generate_launch_description():
                     'password': os.getenv('OM_NTRIP_PASSWORD', ''),
                     'rtcm_message_package': 'rtcm_msgs',
                 }],
+                remappings=[('fix', '/gps/fix')],
             ),
         )
 

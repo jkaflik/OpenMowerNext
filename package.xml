@@ -61,7 +61,7 @@
   <exec_depend>unique_identifier_msgs</exec_depend>
   <exec_depend>micro_ros_agent</exec_depend>
 
-  <exec_depend>ublox_gps</exec_depend>
+  <exec_depend>ublox_f9p</exec_depend>
   <exec_depend>ntrip_client</exec_depend>
 
   <exec_depend>navigation2</exec_depend>
