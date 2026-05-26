@@ -22,7 +22,7 @@ repositories:
   fusioncore:
     type: git
     url: https://github.com/jkaflik/fusioncore.git
-    version: openmower/gnss-track-heading-thresholds
+    version: openmower/gnss-rotation-heading-bootstrap
   webots_ros2:
     type: git
     url: https://github.com/jkaflik/webots_ros2.git
