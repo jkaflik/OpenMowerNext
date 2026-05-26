@@ -50,6 +50,10 @@ def generate_launch_description():
     gnss_track_heading_min_speed = LaunchConfiguration("gnss_track_heading_min_speed")
     gnss_track_heading_min_dist = LaunchConfiguration("gnss_track_heading_min_dist")
     gnss_heading_observable_distance = LaunchConfiguration("gnss_heading_observable_distance")
+    gnss_use_gps_fix = LaunchConfiguration("gnss_use_gps_fix")
+    gnss_fix_topic = LaunchConfiguration("gnss_fix_topic")
+    init_stationary_window = LaunchConfiguration("init_stationary_window")
+    init_wait_for_all_sensors = LaunchConfiguration("init_wait_for_all_sensors")
     datum_lat = require_env_float("OM_DATUM_LAT")
     datum_lon = require_env_float("OM_DATUM_LONG")
     datum_x, datum_y, datum_z = wgs84_to_ecef(datum_lat, datum_lon)
@@ -82,12 +86,17 @@ def generate_launch_description():
                 "gnss.heading_observable_distance": ParameterValue(
                     gnss_heading_observable_distance, value_type=float
                 ),
+                "gnss.use_gps_fix": ParameterValue(gnss_use_gps_fix, value_type=bool),
+                "init.stationary_window": ParameterValue(init_stationary_window, value_type=float),
+                "init.wait_for_all_sensors": ParameterValue(
+                    init_wait_for_all_sensors, value_type=bool
+                ),
             },
         ],
         remappings=[
             ("/imu/data", "/imu/data_raw"),
             ("/odom/wheels", "/diff_drive_base_controller/odom"),
-            ("/gnss/fix", "/gps/fix"),
+            ("/gnss/fix", gnss_fix_topic),
         ],
     )
 
@@ -124,22 +133,9 @@ def generate_launch_description():
             # Set env var to print messages to stdout immediately
             SetEnvironmentVariable("RCUTILS_LOGGING_BUFFERED_STREAM", "1"),
             DeclareLaunchArgument(
-                "namespace", default_value="", description="Top-level namespace"
-            ),
-            DeclareLaunchArgument(
                 "use_sim_time",
                 default_value="false",
                 description="Use simulation clock if true",
-            ),
-            DeclareLaunchArgument(
-                "autostart",
-                default_value="true",
-                description="Automatically startup the nav2 stack",
-            ),
-            DeclareLaunchArgument(
-                "params_file",
-                default_value=os.path.join(package_path, "config", "nav2_params.yaml"),
-                description="Full path to the ROS2 parameters file to use",
             ),
             DeclareLaunchArgument(
                 "gnss_base_noise_xy",
@@ -160,6 +156,26 @@ def generate_launch_description():
                 "gnss_heading_observable_distance",
                 default_value="5.0",
                 description="Valid GNSS track distance before enabling GNSS lever-arm correction",
+            ),
+            DeclareLaunchArgument(
+                "gnss_use_gps_fix",
+                default_value="false",
+                description="Subscribe to gps_msgs/GPSFix instead of sensor_msgs/NavSatFix",
+            ),
+            DeclareLaunchArgument(
+                "gnss_fix_topic",
+                default_value="/gps/fix",
+                description="GNSS fix topic remapped into FusionCore /gnss/fix",
+            ),
+            DeclareLaunchArgument(
+                "init_stationary_window",
+                default_value="2.0",
+                description="Seconds of stationary IMU data to collect before FusionCore init",
+            ),
+            DeclareLaunchArgument(
+                "init_wait_for_all_sensors",
+                default_value="true",
+                description="Wait for every configured FusionCore sensor before initialization",
             ),
             Node(
                 package="tf2_ros",

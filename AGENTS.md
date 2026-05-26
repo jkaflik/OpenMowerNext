@@ -24,6 +24,8 @@
 - Sim launch from repo root: `make sim`; it sources ROS, the installed workspace, `.devcontainer/default.env`, then launches `open_mower_next sim.launch.py` with Webots.
 - Headless Webots smoke launch: `WEBOTS_OFFSCREEN=1 ros2 launch open_mower_next sim.launch.py gui:=false mode:=fast` after sourcing ROS and `install/setup.bash`.
 - ROS MCP rosbridge foreground launch: `make rosbridge`; user service setup: `make rosbridge-service-enable`.
+- `omdev.local` hardware iteration uses a long-lived `docker.io/library/ros:jazzy` dev container, not the GHCR production image: `make omdev-sync`, `make omdev-dev-start`, `make omdev-deps`, `make omdev-build`, `make omdev-run-workspace`, `make omdev-logs`.
+- If `omdev-build` reports stale generated CMake paths after changing the dev container image, run `make omdev-clean` before rebuilding.
 - Direct ROS package launches use `open_mower_next`, e.g. `ros2 launch open_mower_next openmower.launch.py` or `ros2 launch open_mower_next sim.launch.py`.
 - Docs are isolated under `docs/`: `cd docs && npm ci && npm run docs:build`; dev server is `npm run docs:dev`.
 
@@ -41,6 +43,8 @@
 - `launch/rsp.launch.py` references package `open_mower_ros`, unlike the rest of the repo; verify before relying on `make rsp`.
 - If moving the docking plugin XML, update `src/docking_helper/plugins.xml`, `cmake/docking_helper.cmake`, `package.xml`, and the manual copy in `Dockerfile`.
 - The runtime Docker entrypoint creates an empty GeoJSON map when `OM_MAP_PATH` is missing; normal dev shells do not.
+- Do not use `ghcr.io/jkaflik/openmowernext:*` as the default `omdev.local` iteration image; it can carry stale dependency headers. Use the mutable `docker.io/library/ros:jazzy` dev container and refresh deps from the synced workspace with `make omdev-deps`.
+- Do not run `make custom-deps` inside the `omdev.local` dev container; sync `src/lib` from the dev machine and use `rosdep`/`colcon` there so local vendored branches are not overwritten by `vcs import --force`.
 - Webots is the only supported simulation backend; Gazebo assets and `ros_gz` bridge logic are legacy and should not be reintroduced.
 - Webots launch depends on `webots_ros2_driver`, `webots_ros2_control`, and a Webots binary available on the host.
 - If `webots_ros2_driver` auto-installs Webots, it usually lands in `~/.ros/webotsR2025a/webots`; export `WEBOTS_HOME` to that path or use `make sim`.

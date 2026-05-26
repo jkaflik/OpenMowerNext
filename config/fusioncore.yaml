@@ -5,6 +5,7 @@ fusioncore:
     publish_rate: 50.0
     publish.force_2d: true
     publish.tf: true
+    motion_model: DifferentialDrive
 
     imu.topic: /imu/data
     imu.frame_id: imu
@@ -23,6 +24,7 @@ fusioncore:
     # ublox_f9p maps RTK fixed to GBAS and RTK float/differential to SBAS,
     # but allow standalone GNSS so localization can start before corrections converge.
     gnss.min_fix_type: 1
+    gnss.use_gps_fix: false
     gnss.velocity_topic: /gps/odom
     gnss.lever_arm_x: 0.32
     gnss.lever_arm_y: 0.0
@@ -39,6 +41,11 @@ fusioncore:
     gnss.rotation_heading_sigma_floor: 0.05
     gnss.rotation_heading_delta_yaw_sigma: 0.03
     gnss.rotation_heading_max_window_s: 10.0
+    gnss.coast_n: 5
+    gnss.coast_q_factor: 10.0
+    gnss.coast_timeout_s: 30.0
+    gnss.coast_q_bias_factor: 100.0
+    gnss.coast_imu_wz_scale: 500.0
 
     outlier_rejection: true
     outlier_threshold_gnss: 16.27
@@ -46,7 +53,7 @@ fusioncore:
     outlier_threshold_enc: 11.34
     outlier_threshold_hdg: 10.83
 
-    init.stationary_window: 0.0
+    init.stationary_window: 2.0
     init.wait_for_all_sensors: true
     init.sensor_wait_timeout: 10.0
 

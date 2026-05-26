@@ -25,6 +25,23 @@ Override it for another robot:
 make REMOTE_HOST=my-mower.local REMOTE_USER=my-user remote-devices
 ```
 
+The `omdev-*` targets use `omdev.local` through `REMOTE_HOST` by default and the current local username as `OMDEV_USER`:
+
+```bash
+make omdev-status
+make omdev-sync
+make omdev-build
+make omdev-run
+make omdev-logs
+make omdev-stop
+```
+
+Override the target host or user when needed:
+
+```bash
+make OMDEV_HOST=my-mower.local OMDEV_USER=pi omdev-status
+```
+
 ## Configuration Files
 
 Keep site-specific state outside the repository. A typical target layout is:
@@ -42,34 +59,88 @@ OM_DATUM_LONG=<longitude>
 OM_MAP_PATH=/next/map.json
 ```
 
+Use raw `KEY=value` entries in this file. `podman --env-file` passes shell quotes
+literally, so `OM_NTRIP_PASSWORD="secret"` includes the quote characters in the
+password and can cause NTRIP caster `401 Unauthorized` responses.
+
 Do not commit private coordinates, credentials, NTRIP settings, or real maps to the repository.
 
 ## Container Runtime
 
-The current hardware-oriented runtime is containerized. A simple foreground run looks like this:
+`omdev.local` is a mutable hardware-development target. Do not run the production `ghcr.io/jkaflik/openmowernext:*` image there during iteration. The default Makefile flow uses a long-lived `docker.io/library/ros:jazzy` container named `next-dev`, mounts the synced workspace, installs dependencies from that workspace, and launches from the local build output.
+
+Sync the workspace and create or start the dev container:
 
 ```bash
-sudo podman run --rm --name next \
-  --privileged \
-  --network host \
-  -v /dev:/dev \
-  -v "$HOME/next:/next" \
-  --env-file "$HOME/omnext/openmower.env" \
-  ghcr.io/jkaflik/openmowernext:main
+make omdev-sync
+make omdev-dev-start
 ```
 
-Use foreground runs while bringing up a robot. They make launch failures, hardware permissions, and ROS node crashes immediately visible.
+Recreate it after changing the map mount layout, base image, or container options:
+
+```bash
+make omdev-dev-recreate
+```
+
+`omdev-run-workspace` reloads `~/omnext/openmower.env` for the launch process, so changing datum or NTRIP values does not require recreating the dev container.
+
+Install or refresh dependencies inside the dev container after syncing:
+
+```bash
+make omdev-deps
+```
+
+`omdev-deps` installs ROS tooling, runs `rosdep update`, and installs dependencies for the root package plus the hardware-relevant vendored packages. It intentionally does not run `make custom-deps` on the target because `vcs import --force` can overwrite the synced `src/lib` checkouts.
+
+If the ROS base image or generated CMake metadata changes, clean target-side build artifacts before rebuilding:
+
+```bash
+make omdev-clean
+make omdev-build
+```
+
+After `make omdev-sync` and `make omdev-build`, run the synced workspace:
+
+```bash
+make omdev-run-workspace
+make omdev-logs
+```
+
+Pass extra launch arguments during bring-up when needed:
+
+```bash
+make OMDEV_LAUNCH_ARGS='enable_navigation_readiness:=false' omdev-run-workspace
+```
+
+If a non-IMU sensor is intentionally offline during diagnostics, bypass FusionCore's all-sensor startup gate:
+
+```bash
+make OMDEV_LAUNCH_ARGS='enable_navigation_readiness:=false init_wait_for_all_sensors:=false init_stationary_window:=0.0' omdev-run-workspace
+```
+
+FusionCore still initializes from the first IMU sample, so this does not bypass a missing `/imu/data_raw` publisher.
+
+The image can be changed without editing the Makefile:
+
+```bash
+make OMDEV_IMAGE=docker.io/library/ros:jazzy omdev-dev-recreate
+```
 
 ## Fast Iteration
 
-For rapid development, avoid rebuilding and pushing the full runtime image for every source change. Prefer this loop:
+For rapid development, avoid rebuilding and pushing a runtime image for hardware validation. Prefer this loop:
 
 - Edit and validate on the development machine.
-- Sync the working tree to the hardware target with `rsync`, excluding `build/`, `install/`, and `log/`.
-- Run an incremental `colcon build --symlink-install` on the target or inside a long-lived development container on the target.
-- Launch in the foreground and watch logs before enabling any service or autonomous behavior.
+- Sync the working tree to the hardware target with `make omdev-sync`; it excludes `build/`, `install/`, `log/`, docs dependencies, and VCS metadata.
+- Run `make omdev-deps` after dependency changes or after recreating the dev container.
+- Run `make omdev-clean` before rebuilding if the base image changed or stale generated CMake paths appear.
+- Run `make omdev-build` to execute an incremental build of the current branch's hardware-critical packages inside the long-lived dev container.
+- Run `make omdev-run-workspace` to launch the synced and built workspace.
+- Watch logs before enabling any service or autonomous behavior.
 
-Use a tagged image from GHCR for reproducible runtime tests and systemd/Podman services once the hardware flow is stable.
+By default `omdev-build` builds `fields2cover`, `vesc_*`, `micro_ros_agent`, `ntrip_client`, `compass_msgs`, `fusioncore_core`, `fusioncore_ros`, and `ublox_f9p` from `src/lib`, then builds `open_mower_next` from the workspace root. Override `OMDEV_FIELDS2COVER_BASE_PATHS`, `OMDEV_LIB_BASE_PATHS`, `OMDEV_LIB_PACKAGES`, or `OMDEV_APP_PACKAGES` if your change needs a wider build.
+
+Use a tagged GHCR image only for explicit release or production-image validation. `omdev.local` bring-up does not require a system service; run the workspace from the ROS Jazzy dev container while iterating.
 
 ## Calibration
 
