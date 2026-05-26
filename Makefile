@@ -16,7 +16,7 @@ SHELL := /bin/bash
 
 all: custom-deps deps build
 
-.PHONY: deps custom-deps build-libs build build-release sim run dev run-foxglove foxglove foxglove-deps foxglove-service-install foxglove-service-enable foxglove-service-disable foxglove-service-restart foxglove-service-status foxglove-service-logs rsp remote-devices rosbridge rosbridge-deps rosbridge-service-install rosbridge-service-enable rosbridge-service-disable rosbridge-service-restart rosbridge-service-status rosbridge-service-logs
+.PHONY: deps custom-deps build-libs build build-release sim run calibrate dev run-foxglove foxglove foxglove-deps foxglove-service-install foxglove-service-enable foxglove-service-disable foxglove-service-restart foxglove-service-status foxglove-service-logs rsp remote-devices rosbridge rosbridge-deps rosbridge-service-install rosbridge-service-enable rosbridge-service-disable rosbridge-service-restart rosbridge-service-status rosbridge-service-logs
 
 deps:
 	rosdep install --from-paths . src/lib --ignore-src -i -y -r
@@ -95,6 +95,9 @@ foxglove-service-logs:
 
 run:
 	ros2 launch launch/openmower.launch.py
+
+calibrate:
+	ros2 run open_mower_next calibrate_robot
 
 dev:
 	cd .devcontainer && docker-compose up -d

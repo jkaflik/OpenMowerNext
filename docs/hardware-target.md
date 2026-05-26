@@ -71,6 +71,40 @@ For rapid development, avoid rebuilding and pushing the full runtime image for e
 
 Use a tagged image from GHCR for reproducible runtime tests and systemd/Podman services once the hardware flow is stable.
 
+## Calibration
+
+OpenMowerNext includes an interactive hardware calibration tool that can measure wheel geometry, drive response, maximum observed speed, and stable navigation speed recommendations from real odometry, GPS, and IMU data.
+
+Launch the robot first, then run the calibration tool from the same built workspace or from inside the target container:
+
+```bash
+ros2 run open_mower_next calibrate_robot --mode preflight
+```
+
+Run the full automatic flow only with the robot in a clear outdoor test area and with an operator ready to stop it:
+
+```bash
+ros2 run open_mower_next calibrate_robot --mode full
+```
+
+The script publishes stamped commands on `/cmd_vel_calibration`. `twist_mux` gives this input higher priority than Nav2 and lower priority than joystick, so joystick teleop remains the preferred manual override.
+
+If you want to drive manually and only record data, use:
+
+```bash
+ros2 run open_mower_next calibrate_robot --mode full --drive-mode manual
+```
+
+The generated report is written under `log/calibration/` as JSON and YAML. It includes recommended changes for `config/controllers.yaml`, `config/hardware/yardforce500.yaml`, `config/nav2_params.yaml`, and related limits when enough data was collected.
+
+Apply recommendations only after reviewing the report:
+
+```bash
+ros2 run open_mower_next calibrate_robot --mode full --apply
+```
+
+The `--apply` mode creates timestamped `.bak.<timestamp>` backups before writing YAML files.
+
 ## Safety
 
 Before launching on real hardware:
