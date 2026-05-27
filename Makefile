@@ -1,4 +1,4 @@
-REMOTE_HOST ?= omdev.local
+REMOTE_HOST ?= 10.0.250.5
 REMOTE_USER ?= openmower
 ROS_DISTRO ?= jazzy
 ROS_LOG_DIR = log/
@@ -13,10 +13,11 @@ OMDEV_ENV_FILE ?= /home/$(OMDEV_USER)/omnext/openmower.env
 OMDEV_IMAGE ?= docker.io/library/ros:jazzy
 OMDEV_BUILD_IMAGE ?= $(OMDEV_IMAGE)
 OMDEV_CONTAINER_WORKSPACE ?= /target_ws
+OMROS2_FIRMWARE_MSGS_BASE_PATH ?= src/lib/omros2_firmware/extra_packages/omros2_firmware_msgs
 OMDEV_FIELDS2COVER_BASE_PATHS ?= src/lib/fields2cover
 OMDEV_FIELDS2COVER_PACKAGES ?= --packages-select fields2cover
-OMDEV_LIB_BASE_PATHS ?= src/lib/vesc src/lib/micro_ros_agent src/lib/ntrip_client src/lib/fusioncore/compass_msgs src/lib/fusioncore/fusioncore_core src/lib/fusioncore/fusioncore_ros src/lib/ublox_f9p
-OMDEV_LIB_PACKAGES ?= --packages-select vesc_msgs vesc_driver vesc_hw_interface vesc micro_ros_agent ntrip_client compass_msgs fusioncore_core fusioncore_ros ublox_f9p
+OMDEV_LIB_BASE_PATHS ?= src/lib/vesc src/lib/micro_ros_agent src/lib/ntrip_client src/lib/fusioncore/compass_msgs src/lib/fusioncore/fusioncore_core src/lib/fusioncore/fusioncore_ros src/lib/ublox_f9p $(OMROS2_FIRMWARE_MSGS_BASE_PATH)
+OMDEV_LIB_PACKAGES ?= --packages-select vesc_msgs vesc_driver vesc_hw_interface vesc micro_ros_agent ntrip_client compass_msgs fusioncore_core fusioncore_ros ublox_f9p omros2_firmware_msgs
 OMDEV_APP_PACKAGES ?= --packages-select open_mower_next
 OMDEV_CMAKE_ARGS ?= --cmake-args -DBUILD_TESTING=OFF
 OMDEV_FIELDS2COVER_CMAKE_ARGS ?= --cmake-args -DBUILD_TESTING=OFF -DBUILD_TUTORIALS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOC=OFF
@@ -51,12 +52,13 @@ FOXGLOVE_SERVICE ?= openmower-foxglove.service
 FOXGLOVE_USE_SIM_TIME ?= false
 WEBOTS_STREAM ?= true
 WEBOTS_PORT ?= 1234
+CALIBRATE_ARGS ?=
 SYSTEMD_USER_DIR ?= $(HOME)/.config/systemd/user
 SHELL := /bin/bash
 
 all: custom-deps deps build
 
-.PHONY: deps custom-deps build-libs build build-release sim run calibrate dev run-foxglove foxglove foxglove-deps foxglove-service-install foxglove-service-enable foxglove-service-disable foxglove-service-restart foxglove-service-status foxglove-service-logs rsp remote-devices omdev omdev-sync omdev-pull omdev-dev-create omdev-dev-recreate omdev-dev-start omdev-dev-stop omdev-deps omdev-clean omdev-run omdev-run-workspace omdev-restart omdev-stop omdev-logs omdev-status omdev-shell omdev-build rosbridge rosbridge-deps rosbridge-service-install rosbridge-service-enable rosbridge-service-disable rosbridge-service-restart rosbridge-service-status rosbridge-service-logs
+.PHONY: deps custom-deps build-libs build build-release sim run calibrate dev run-foxglove foxglove foxglove-deps foxglove-service-install foxglove-service-enable foxglove-service-disable foxglove-service-restart foxglove-service-status foxglove-service-logs rsp remote-devices omdev omdev-sync omdev-pull omdev-dev-create omdev-dev-recreate omdev-dev-start omdev-dev-stop omdev-deps omdev-clean omdev-run omdev-run-workspace omdev-restart omdev-stop omdev-logs omdev-status omdev-shell omdev-calibrate omdev-build rosbridge rosbridge-deps rosbridge-service-install rosbridge-service-enable rosbridge-service-disable rosbridge-service-restart rosbridge-service-status rosbridge-service-logs
 
 deps:
 	rosdep install --from-paths . src/lib --ignore-src -i -y -r
@@ -68,7 +70,7 @@ build-libs:
 	colcon build --base-paths "src/lib/*" --cmake-args -DBUILD_TESTING=OFF
 
 build:
-	colcon build --symlink-install
+	colcon build --symlink-install --base-paths . $(OMROS2_FIRMWARE_MSGS_BASE_PATH)
 
 build-release:
 	colcon build --base-paths "src/lib/*" --cmake-args -DCMAKE_BUILD_TYPE=Release
@@ -136,8 +138,7 @@ foxglove-service-logs:
 run:
 	ros2 launch launch/openmower.launch.py
 
-calibrate:
-	ros2 run open_mower_next calibrate_robot
+calibrate: omdev-calibrate
 
 dev:
 	cd .devcontainer && docker-compose up -d
@@ -197,6 +198,9 @@ omdev-status:
 
 omdev-shell:
 	ssh -t $(OMDEV_SSH_OPTS) $(OMDEV_SSH) '$(OMDEV_PODMAN) exec -it "$(OMDEV_CONTAINER)" bash'
+
+omdev-calibrate: omdev-sync omdev-dev-start
+	ssh -t $(OMDEV_SSH_OPTS) $(OMDEV_SSH) '$(OMDEV_PODMAN) exec -it "$(OMDEV_CONTAINER)" bash -lc "source /opt/ros/$(ROS_DISTRO)/setup.bash; cd $(OMDEV_CONTAINER_WORKSPACE); if [ -f install/setup.bash ]; then source install/setup.bash; fi; python3 scripts/calibrate_robot.py $(CALIBRATE_ARGS)"'
 
 omdev-build: omdev-sync omdev-dev-start
 	ssh $(OMDEV_SSH_OPTS) $(OMDEV_SSH) 'set -e; uid=$$(id -u); gid=$$(id -g); $(OMDEV_PODMAN) exec --user "$$uid:$$gid" -e HOME=/tmp "$(OMDEV_CONTAINER)" bash -lc "source /opt/ros/$(ROS_DISTRO)/setup.bash && cd $(OMDEV_CONTAINER_WORKSPACE) && colcon build --symlink-install --base-paths $(OMDEV_FIELDS2COVER_BASE_PATHS) $(OMDEV_FIELDS2COVER_PACKAGES) $(OMDEV_FIELDS2COVER_CMAKE_ARGS) && source install/setup.bash && colcon build --symlink-install --base-paths $(OMDEV_LIB_BASE_PATHS) $(OMDEV_LIB_PACKAGES) $(OMDEV_LIB_CMAKE_ARGS) && source install/setup.bash && colcon build --symlink-install $(OMDEV_APP_PACKAGES) $(OMDEV_APP_CMAKE_ARGS)"'

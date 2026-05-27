@@ -17,9 +17,10 @@ ament_target_dependencies(docking_helper
         tf2
         tf2_ros
         tf2_geometry_msgs
-        nav2_msgs
-        geometry_msgs
-        std_msgs
+  nav2_msgs
+  geometry_msgs
+  omros2_firmware_msgs
+  std_msgs
 )
 
 INSTALL(TARGETS docking_helper
@@ -36,6 +37,7 @@ target_include_directories(charger_presence_charging_dock PUBLIC
 ament_target_dependencies(charger_presence_charging_dock
   pluginlib
   opennav_docking_core
+  omros2_firmware_msgs
   std_msgs
   rclcpp_lifecycle
   tf2_ros

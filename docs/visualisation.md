@@ -30,3 +30,17 @@ make foxglove-service-enable
 ```
 
 Useful service commands are `make foxglove-service-status`, `make foxglove-service-restart`, `make foxglove-service-disable`, and `make foxglove-service-logs`.
+
+## Joystick Control
+
+The Foxglove dashboard uses Josh Newans' `joy-panel.Joystick` panel as the external joystick source. Configure the panel to publish `sensor_msgs/msg/Joy` on `/joy`.
+
+OpenMowerNext runs `teleop_twist_joy` in both the hardware and Webots simulation launches. It subscribes to `/joy` and publishes joystick velocity commands on `/cmd_vel_joy` as `geometry_msgs/msg/TwistStamped` with `base_link` as the frame.
+
+The command flow is:
+
+```text
+Foxglove Joystick -> /joy -> teleop_twist_joy -> /cmd_vel_joy
+```
+
+The stack intentionally stays on stamped velocity commands: `twist_mux` uses stamped input, `diff_drive_base_controller` accepts stamped velocity, and Nav2 has stamped command velocity enabled.

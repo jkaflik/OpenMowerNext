@@ -14,6 +14,7 @@ target_link_libraries(sim_node "${cpp_typesupport_target}")
 ament_target_dependencies(sim_node
         geometry_msgs
         nav_msgs
+        omros2_firmware_msgs
         rclcpp
         sensor_msgs
         std_msgs

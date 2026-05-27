@@ -21,9 +21,9 @@ The node is designed to work with the Webots simulator, using a configured docki
 
 The Sim Node detects when the robot's `charging_port` frame is in close proximity to the docking station's charging contacts. When the robot is properly docked:
 
-- The `/power/charger_present` topic will be `true`
+- The `/power/status` `charger_present` field will be `true`
 - The battery will start charging
-- A charging voltage will be published on the `/power/charge_voltage` topic
+- A charging voltage will be published in the `/power/status` `charge_voltage` field
 
 The docking station contact pose is configured in the simulation launch file to match the Webots docking station model.
 
@@ -39,9 +39,8 @@ The battery simulation provides a simplified model of a real battery system:
 
 | Topic | Type | Description |
 |-------|------|-------------|
-| `/power/charger_present` | `std_msgs/Bool` | Indicates if the robot is properly docked |
 | `/power` | `sensor_msgs/BatteryState` | Battery state information including voltage, percentage, and status |
-| `/power/charge_voltage` | `std_msgs/Float32` | Voltage provided by the charger when docked |
+| `/power/status` | `omros2_firmware_msgs/PowerStatus` | Firmware-compatible power and charging snapshot, including dock contact and charge voltage |
 
 ## Parameters
 
@@ -65,5 +64,5 @@ Docking is considered successful when the charging port is within 5cm of the doc
 The battery simulation logic is simplified:
 - If charger is present: Voltage increases at a constant rate until maximum
 - If charger is not present: Voltage decreases at a constant rate
-- Battery percentage is calculated based on min/max voltage range
+- Battery percentage is calculated based on min/max voltage range. `PowerStatus.battery_percentage` is `0..100`; `BatteryState.percentage` follows the ROS convention of `0.0..1.0`.
 - Battery health status (GOOD, DEAD, OVERVOLTAGE) is determined by voltage levels

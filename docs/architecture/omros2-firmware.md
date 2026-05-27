@@ -14,8 +14,7 @@ This firmware supports only the recent OpenMower mainboard v0.13.x.
 * :white_check_mark: DDS communication
 * :white_check_mark: `sensor_msgs/Imu` message published on `/imu/data_raw` topic
 * :white_check_mark: `sensor_msgs/BatteryState` message published on `/power` topic
-  * :white_check_mark: `std_msgs/Float32` message published on `/power/charge_voltage` topic
-  * :white_check_mark: `std_msgs/Bool` message published on `/power/charger_present` topic
+* :white_check_mark: `omros2_firmware_msgs/PowerStatus` message published on `/power/status` topic
 * :white_check_mark: OpenMower charging logic
 * :white_check_mark: ping micro-ROS agent, make sure it is alive
 * :red_circle: safety features

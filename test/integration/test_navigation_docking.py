@@ -13,6 +13,7 @@ from lifecycle_msgs.msg import State
 from lifecycle_msgs.srv import GetState
 from nav2_msgs.action import NavigateToPose
 from nav_msgs.msg import OccupancyGrid, Odometry
+from omros2_firmware_msgs.msg import PowerStatus
 from open_mower_next.action import DockRobotNearest
 from open_mower_next.msg import Map
 from rclpy.action import ActionClient
@@ -23,7 +24,6 @@ from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import Bool, Float32
 
 
 NAVIGATION_GOAL_X = -0.2
@@ -66,8 +66,7 @@ ROSBAG_TOPICS = (
     "/cmd_vel_raw",
     "/cmd_vel_nav",
     "/diff_drive_base_controller/cmd_vel",
-    "/power/charger_present",
-    "/power/charge_voltage",
+    "/power/status",
     "/dock_pose",
     "/staging_pose",
     "/docking_trajectory",
@@ -254,8 +253,7 @@ class NavigationDockingTestNode(Node):
         self.create_subscription(NavSatFix, "/gps/fix", self._gps_fix_callback, 10)
         self.create_subscription(Odometry, "/gps/odom", self._gps_odom_callback, 10)
         self.create_subscription(Odometry, "/fusion/odom", self._odom_callback, 10)
-        self.create_subscription(Bool, "/power/charger_present", self._charger_callback, 10)
-        self.create_subscription(Float32, "/power/charge_voltage", self._charge_voltage_callback, 10)
+        self.create_subscription(PowerStatus, "/power/status", self._power_status_callback, 10)
 
     def _clock_callback(self, _msg: Clock) -> None:
         self.clock_received = True
@@ -282,11 +280,9 @@ class NavigationDockingTestNode(Node):
         distance = math.hypot(position.x - NAVIGATION_GOAL_X, position.y - NAVIGATION_GOAL_Y)
         self.closest_navigation_goal_distance = min(self.closest_navigation_goal_distance, distance)
 
-    def _charger_callback(self, msg: Bool) -> None:
-        self.charger_present = msg.data
-
-    def _charge_voltage_callback(self, msg: Float32) -> None:
-        self.charge_voltage = msg.data
+    def _power_status_callback(self, msg: PowerStatus) -> None:
+        self.charger_present = msg.charger_present
+        self.charge_voltage = msg.charge_voltage
 
     def has_ready_state(self) -> bool:
         if not self.clock_received or not self.map_grid_received:
