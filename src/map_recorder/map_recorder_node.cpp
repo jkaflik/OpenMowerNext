@@ -44,8 +44,8 @@ MapRecorderNode::MapRecorderNode(const rclcpp::NodeOptions& options)
   save_docking_station_client_ = create_client<open_mower_next::srv::SaveDockingStation>("save_docking_station");
   save_area_client_ = create_client<open_mower_next::srv::SaveArea>("save_area");
 
-  charging_status_sub_ = create_subscription<std_msgs::msg::Bool>(
-      "/power/charger_present", 10, std::bind(&MapRecorderNode::chargingStatusCallback, this, _1));
+  charging_status_sub_ = create_subscription<omros2_firmware_msgs::msg::PowerStatus>(
+      "/power/status", 10, std::bind(&MapRecorderNode::chargingStatusCallback, this, _1));
 
   boundary_polygon_pub_ =
       create_publisher<geometry_msgs::msg::PolygonStamped>("/map_recorder/record_boundaries_polygon", 10);
@@ -627,9 +627,9 @@ void MapRecorderNode::handleFinishAreaRecording(const std::shared_ptr<std_srvs::
   return;
 }
 
-void MapRecorderNode::chargingStatusCallback(const std_msgs::msg::Bool::SharedPtr msg)
+void MapRecorderNode::chargingStatusCallback(const omros2_firmware_msgs::msg::PowerStatus::SharedPtr msg)
 {
-  is_charging_detected_ = msg->data;
+  is_charging_detected_ = msg->charger_present;
 }
 
 bool MapRecorderNode::checkPositionCovariance()

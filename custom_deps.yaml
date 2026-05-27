@@ -27,3 +27,7 @@ repositories:
     type: git
     url: https://github.com/jkaflik/webots_ros2.git
     version: openmower/fix-gps-navsat-status
+  omros2_firmware:
+    type: git
+    url: https://github.com/jkaflik/omros2-firmware.git
+    version: ba454a21bde8562baa7fe328613e7e3644b9c284

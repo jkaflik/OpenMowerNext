@@ -3,7 +3,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <opennav_docking_core/charging_dock.hpp>
-#include <std_msgs/msg/bool.hpp>
+#include <omros2_firmware_msgs/msg/power_status.hpp>
 #include <tf2/utils.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
@@ -32,7 +32,7 @@ public:
   bool hasStoppedCharging() override;
 
 private:
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr is_charging_sub_;
+  rclcpp::Subscription<omros2_firmware_msgs::msg::PowerStatus>::SharedPtr power_status_sub_;
   bool is_charging_ = false;  // Initialize to prevent undefined behavior
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;

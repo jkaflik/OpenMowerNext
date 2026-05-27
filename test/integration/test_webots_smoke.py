@@ -9,9 +9,9 @@ import pytest
 import rclpy
 from geometry_msgs.msg import TwistStamped
 from nav_msgs.msg import Odometry
+from omros2_firmware_msgs.msg import PowerStatus
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import BatteryState, Imu, NavSatFix
-from std_msgs.msg import Bool, Float32
 
 
 REQUIRED_TOPICS = {
@@ -22,8 +22,7 @@ REQUIRED_TOPICS = {
     "/diff_drive_base_controller/odom",
     "/fusion/odom",
     "/power",
-    "/power/charge_voltage",
-    "/power/charger_present",
+    "/power/status",
 }
 
 LOG_FAILURE_PATTERNS = (
@@ -142,8 +141,7 @@ def wait_for_topics_and_motion() -> None:
     node.create_subscription(Odometry, "/gps/odom", mark("/gps/odom"), 10)
     node.create_subscription(Imu, "/imu/data_raw", mark("/imu/data_raw"), 10)
     node.create_subscription(Odometry, "/fusion/odom", mark("/fusion/odom"), 10)
-    node.create_subscription(Bool, "/power/charger_present", mark("/power/charger_present"), 10)
-    node.create_subscription(Float32, "/power/charge_voltage", mark("/power/charge_voltage"), 10)
+    node.create_subscription(PowerStatus, "/power/status", mark("/power/status"), 10)
     node.create_subscription(BatteryState, "/power", mark("/power"), 10)
     node.create_subscription(
         Odometry,

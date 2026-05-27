@@ -1,41 +1,20 @@
 {
   "configById": {
-    "Parameters!2tk0ho3": {
-      "title": "Parameters"
-    },
-    "SourceInfo!f2w7h8": {},
-    "RosOut!1anfqcv": {
-      "searchTerms": [],
-      "minLogLevel": 1
-    },
-    "3D!2gz3kf4": {
+    "3D!robot-overview": {
       "cameraState": {
         "perspective": true,
-        "distance": 14.70183781243095,
-        "phi": 51.15722910343571,
-        "thetaOffset": 32.968204010013444,
-        "targetOffset": [
-          2.935055849217841,
-          -7.049400716494065,
-          -4.8151705682163236e-15
-        ],
-        "target": [
-          0,
-          0,
-          0
-        ],
-        "targetOrientation": [
-          0,
-          0,
-          0,
-          1
-        ],
+        "distance": 9,
+        "phi": 52,
+        "thetaOffset": 35,
+        "targetOffset": [0, 0, 0],
+        "target": [0, 0, 0],
+        "targetOrientation": [0, 0, 0, 1],
         "fovy": 45,
-        "near": 0.5,
+        "near": 0.05,
         "far": 5000
       },
       "followMode": "follow-pose",
-      "followTf": "map",
+      "followTf": "base_link",
       "scene": {
         "transforms": {
           "labelSize": 0.05,
@@ -45,176 +24,42 @@
         "enableStats": false
       },
       "transforms": {
-        "frame:camera_link": {
-          "visible": false
-        },
-        "frame:camera_accel_frame": {
-          "visible": false
-        },
-        "frame:camera_accel_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_color_frame": {
-          "visible": false
-        },
-        "frame:camera_depth_frame": {
-          "visible": false
-        },
-        "frame:camera_color_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_gyro_frame": {
-          "visible": false
-        },
-        "frame:camera_depth_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_imu_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_gyro_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_infra1_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_infra1_frame": {
-          "visible": false
-        },
-        "frame:camera_infra2_frame": {
-          "visible": false
-        },
-        "frame:camera_infra2_optical_frame": {
-          "visible": false
-        },
-        "frame:camera_bottom_screw_frame": {
-          "visible": false
-        },
-        "frame:chassis": {
-          "visible": true
-        },
-        "frame:map": {
-          "visible": true
-        }
+        "frame:map": { "visible": true },
+        "frame:odom": { "visible": true },
+        "frame:base_link": { "visible": true },
+        "frame:charging_port": { "visible": true },
+        "frame:gnss_link": { "visible": true },
+        "frame:imu": { "visible": false }
       },
       "topics": {
-        "/robot_description": {
-          "visible": true
-        },
-        "/camera/depth/color/points": {
-          "visible": true,
-          "colorMode": "rgb",
-          "stixelsEnabled": false,
-          "colorField": "rgb",
-          "colorMap": "turbo"
-        },
-        "/camera/depth/camera_info": {
-          "visible": false
-        },
-        "/camera/color/camera_info": {
-          "visible": false
-        },
-        "/camera/color/image_raw": {
-          "visible": false,
-          "frameLocked": true,
-          "cameraInfoTopic": "/camera/color/camera_info",
-          "distance": 1,
-          "planarProjectionFactor": 0,
-          "color": "#ffffff"
-        },
-        "/camera/depth/image_rect_raw": {
-          "visible": false,
-          "frameLocked": true,
-          "cameraInfoTopic": "/camera/depth/camera_info",
-          "distance": 1,
-          "planarProjectionFactor": 0,
-          "color": "#ffffff"
-        },
-        "/move_base_simple/goal": {
-          "visible": false,
-          "axisScale": 2.7
-        },
-        "/initialpose": {
-          "visible": false
-        },
-        "/map": {
-          "visible": false
-        },
-        "/scan": {
-          "visible": false
-        },
-        "/amcl_pose": {
-          "visible": false
-        },
-        "/camera/infra1/image_rect_raw": {
-          "visible": false,
-          "frameLocked": true,
-          "cameraInfoTopic": "/camera/infra1/camera_info",
-          "distance": 1,
-          "planarProjectionFactor": 0,
-          "color": "#ffffff"
-        },
-        "/camera/infra1/camera_info": {
-          "visible": false
-        },
-        "/local_costmap/costmap": {
-          "visible": false
-        },
-        "/local_costmap/voxel_layer": {
-          "visible": false
-        },
-        "/local_plan": {
-          "visible": false
-        },
-        "/transformed_global_plan": {
-          "visible": false
-        },
-        "/marker": {
-          "visible": false
-        },
-        "/cost_cloud": {
-          "visible": false
-        },
-        "/local_costmap/static_layer": {
-          "visible": false
-        },
-        "/global_costmap/costmap": {
-          "visible": false
-        },
-        "/global_costmap/obstacle_layer": {
-          "visible": false
-        },
-        "/global_costmap/static_layer": {
-          "visible": false
-        }
+        "/robot_description": { "visible": true },
+        "/map_grid": { "visible": true },
+        "/map_visualization": { "visible": true },
+        "/docking_stations_poses": { "visible": true },
+        "/map_recorder/record_boundaries_polygon": { "visible": true },
+        "/dock_pose": { "visible": true },
+        "/staging_pose": { "visible": true },
+        "/docking_trajectory": { "visible": true }
       },
       "layers": {
-        "00763ac2-076e-494b-bf0f-fa441cb46f1c": {
+        "grid": {
           "visible": true,
           "frameLocked": true,
           "label": "Grid",
-          "instanceId": "00763ac2-076e-494b-bf0f-fa441cb46f1c",
+          "instanceId": "grid",
           "layerId": "foxglove.Grid",
-          "size": 10,
-          "divisions": 10,
+          "size": 20,
+          "divisions": 20,
           "lineWidth": 1,
-          "color": "#248eff",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
+          "color": "#2f81f7",
+          "position": [0, 0, 0],
+          "rotation": [0, 0, 0],
           "order": 1
         }
       },
       "publish": {
         "type": "pose",
-        "poseTopic": "/move_base_simple/goal",
+        "poseTopic": "/goal_pose",
         "pointTopic": "/clicked_point",
         "poseEstimateTopic": "/initialpose",
         "poseEstimateXDeviation": 0.5,
@@ -223,65 +68,262 @@
       },
       "imageMode": {}
     },
-    "map!3i1j9xz": {
+    "3D!simulation-ros": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 7,
+        "phi": 48,
+        "thetaOffset": 25,
+        "targetOffset": [0, 0, 0],
+        "target": [0, 0, 0],
+        "targetOrientation": [0, 0, 0, 1],
+        "fovy": 45,
+        "near": 0.05,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "followTf": "base_link",
+      "scene": {
+        "transforms": {
+          "labelSize": 0.05,
+          "showLabel": false,
+          "editable": false
+        },
+        "enableStats": false
+      },
+      "topics": {
+        "/robot_description": { "visible": true },
+        "/map_grid": { "visible": true },
+        "/map_visualization": { "visible": true },
+        "/docking_stations_poses": { "visible": true },
+        "/dock_pose": { "visible": true },
+        "/staging_pose": { "visible": true },
+        "/docking_trajectory": { "visible": true }
+      },
+      "layers": {
+        "grid": {
+          "visible": true,
+          "frameLocked": true,
+          "label": "Grid",
+          "instanceId": "grid",
+          "layerId": "foxglove.Grid",
+          "size": 12,
+          "divisions": 12,
+          "lineWidth": 1,
+          "color": "#2f81f7",
+          "position": [0, 0, 0],
+          "rotation": [0, 0, 0],
+          "order": 1
+        }
+      },
+      "publish": {
+        "type": "pose",
+        "poseTopic": "/goal_pose",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "imageMode": {}
+    },
+    "3D!debug-geometry": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 14,
+        "phi": 55,
+        "thetaOffset": 40,
+        "targetOffset": [0, 0, 0],
+        "target": [0, 0, 0],
+        "targetOrientation": [0, 0, 0, 1],
+        "fovy": 45,
+        "near": 0.05,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "followTf": "map",
+      "scene": {
+        "transforms": {
+          "labelSize": 0.05,
+          "showLabel": true,
+          "editable": false
+        },
+        "enableStats": false
+      },
+      "topics": {
+        "/robot_description": { "visible": true },
+        "/map_grid": { "visible": true },
+        "/map_visualization": { "visible": true },
+        "/docking_stations_poses": { "visible": true },
+        "/map_recorder/record_boundaries_polygon": { "visible": true },
+        "/dock_pose": { "visible": true },
+        "/staging_pose": { "visible": true },
+        "/docking_trajectory": { "visible": true }
+      },
+      "layers": {
+        "grid": {
+          "visible": true,
+          "frameLocked": true,
+          "label": "Grid",
+          "instanceId": "grid",
+          "layerId": "foxglove.Grid",
+          "size": 30,
+          "divisions": 30,
+          "lineWidth": 1,
+          "color": "#64748b",
+          "position": [0, 0, 0],
+          "rotation": [0, 0, 0],
+          "order": 1
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/goal_pose",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose"
+      },
+      "imageMode": {}
+    },
+    "map!robot-gps": {
       "center": {
-        "lat": 52.4954655142106,
-        "lon": 21.385255157947544
+        "lat": -22.9,
+        "lon": -43.2
       },
       "customTileUrl": "",
-      "disabledTopics": [
-        "/gps/filtered"
-      ],
+      "disabledTopics": [],
       "followTopic": "/gps/fix",
       "layer": "map",
       "topicColors": {
-        "/gps/fix": "#4e98e2",
-        "/gps/filtered": "#4e98e2"
+        "/gps/fix": "#2f81f7",
+        "/map/foxglove_geojson": "#22c55e"
       },
-      "zoomLevel": 19,
+      "zoomLevel": 20,
       "maxNativeZoom": 18
     },
-    "virtual-joystick.Virtual Joystick!1bz242v": {
-      "topic": "/cmd_vel",
-      "publishRate": 30,
-      "maxLinearSpeed": 3,
-      "maxAngularSpeed": 3
+    "map!simulation-gps": {
+      "center": {
+        "lat": -22.9,
+        "lon": -43.2
+      },
+      "customTileUrl": "",
+      "disabledTopics": [],
+      "followTopic": "/gps/fix",
+      "layer": "map",
+      "topicColors": {
+        "/gps/fix": "#2f81f7",
+        "/map/foxglove_geojson": "#22c55e"
+      },
+      "zoomLevel": 20,
+      "maxNativeZoom": 18
     },
-    "Gauge!1nkddo2": {
-      "path": "/power.percentage",
+    "foxglove-webots-extension.Webots!simulation-webots": {
+      "serverUrlMode": "auto",
+      "manualServerUrl": "ws://localhost:1234",
+      "webotsPort": 1234,
+      "mode": "w3d",
+      "broadcast": false,
+      "autoConnect": true
+    },
+    "joy-panel.Joystick!robot-joy": {
+      "dataSource": "interactive",
+      "subJoyTopic": "/joy",
+      "gamepadId": 0,
+      "publishMode": true,
+      "pubJoyTopic": "/joy",
+      "publishFrameId": "base_link",
+      "displayMode": "custom",
+      "debugGamepad": false,
+      "layoutName": "xbox",
+      "mapping_name": "TODO"
+    },
+    "joy-panel.Joystick!simulation-joy": {
+      "dataSource": "interactive",
+      "subJoyTopic": "/joy",
+      "gamepadId": 0,
+      "publishMode": true,
+      "pubJoyTopic": "/joy",
+      "publishFrameId": "base_link",
+      "displayMode": "custom",
+      "debugGamepad": false,
+      "layoutName": "xbox",
+      "mapping_name": "TODO"
+    },
+    "Gauge!robot-battery": {
+      "path": "/power/status.battery_percentage",
       "minValue": 0,
       "maxValue": 100,
       "colorMap": "red-yellow-green",
       "colorMode": "colormap",
-      "gradient": [
-        "#0000ff",
-        "#ff00ff"
-      ],
       "reverse": false,
-      "foxglovePanelTitle": "battery percentage"
+      "foxglovePanelTitle": "Battery"
     },
-    "Indicator!1otv6hv": {
-      "path": "/power/charger_present.data",
+    "Gauge!robot-voltage": {
+      "path": "/power.voltage",
+      "minValue": 21.7,
+      "maxValue": 28.7,
+      "colorMap": "red-yellow-green",
+      "colorMode": "colormap",
+      "reverse": false,
+      "foxglovePanelTitle": "Battery V"
+    },
+    "Gauge!simulation-battery": {
+      "path": "/power/status.battery_percentage",
+      "minValue": 0,
+      "maxValue": 100,
+      "colorMap": "red-yellow-green",
+      "colorMode": "colormap",
+      "reverse": false,
+      "foxglovePanelTitle": "Sim battery %"
+    },
+    "Indicator!robot-charger": {
+      "path": "/power/status.charger_present",
       "style": "background",
-      "fallbackColor": "#fffb17",
-      "fallbackLabel": "False",
+      "fallbackColor": "#7f1d1d",
+      "fallbackLabel": "Not charging",
       "rules": [
         {
           "operator": "=",
           "rawValue": "true",
-          "color": "#25bb00",
-          "label": "True"
+          "color": "#166534",
+          "label": "Charging"
         }
       ],
-      "foxglovePanelTitle": "in charger"
+      "foxglovePanelTitle": "Charger"
     },
-    "Plot!1rdecvu": {
+    "Indicator!simulation-charger": {
+      "path": "/power/status.charger_present",
+      "style": "background",
+      "fallbackColor": "#7f1d1d",
+      "fallbackLabel": "Away from dock",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "true",
+          "color": "#166534",
+          "label": "Dock contact"
+        }
+      ],
+      "foxglovePanelTitle": "Dock contact"
+    },
+    "Plot!robot-motion": {
       "paths": [
         {
-          "value": "/power/charge_voltage.data",
+          "value": "/fusion/odom.twist.twist.linear.x",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "label": "charge V"
+          "label": "linear x m/s"
+        },
+        {
+          "value": "/fusion/odom.twist.twist.angular.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "angular z rad/s"
+        },
+        {
+          "value": "/diff_drive_base_controller/odom.twist.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "wheel odom x m/s"
         }
       ],
       "showXAxisLabels": true,
@@ -291,101 +333,574 @@
       "showPlotValuesInLegend": false,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "Motion"
     },
-    "DiagnosticSummary!dqya88": {
+    "Plot!robot-power": {
+      "paths": [
+        {
+          "value": "/power.voltage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "battery V"
+        },
+        {
+          "value": "/power.current",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "current A"
+        },
+        {
+          "value": "/power/status.battery_percentage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "battery"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "Power"
+    },
+    "Plot!simulation-commands": {
+      "paths": [
+        {
+          "value": "/cmd_vel_joy.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "joy linear x"
+        },
+        {
+          "value": "/cmd_vel_nav.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "nav linear x"
+        },
+        {
+          "value": "/cmd_vel_raw.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "raw linear x"
+        },
+        {
+          "value": "/diff_drive_base_controller/cmd_vel.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "controller linear x"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "Command chain"
+    },
+    "Plot!simulation-power": {
+      "paths": [
+        {
+          "value": "/power.voltage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "battery V"
+        },
+        {
+          "value": "/power/status.charge_voltage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "charge V"
+        },
+        {
+          "value": "/power/status.battery_percentage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "battery %"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "Sim power"
+    },
+    "Plot!debug-fusion": {
+      "paths": [
+        {
+          "value": "/fusion/odom.pose.pose.position.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "fusion x"
+        },
+        {
+          "value": "/fusion/odom.pose.pose.position.y",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "fusion y"
+        },
+        {
+          "value": "/gps/odom.twist.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "gps speed x"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "FusionCore"
+    },
+    "Plot!debug-gps": {
+      "paths": [
+        {
+          "value": "/gps/fix.position_covariance[0]",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "gps cov xx"
+        },
+        {
+          "value": "/gps/fix.position_covariance[4]",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "gps cov yy"
+        },
+        {
+          "value": "/gps/fix_extended.speed",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "gps speed m/s"
+        },
+        {
+          "value": "/gps/fix_extended.err_horz",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "gps horiz err m"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "foxglovePanelTitle": "GNSS quality"
+    },
+    "DiagnosticSummary!robot-diagnostics": {
       "minLevel": 0,
       "pinnedIds": [],
       "hardwareIdFilter": "",
       "topicToRender": "/diagnostics",
       "sortByLevel": true
     },
-    "DiagnosticStatusPanel!42w5qw9": {
+    "DiagnosticSummary!debug-diagnostics-summary": {
+      "minLevel": 0,
+      "pinnedIds": [],
+      "hardwareIdFilter": "",
       "topicToRender": "/diagnostics",
-      "selectedHardwareId": "none",
-      "selectedName": "ekf_se_odom: Filter diagnostic updater",
+      "sortByLevel": true
+    },
+    "DiagnosticStatusPanel!debug-diagnostics-status": {
+      "topicToRender": "/diagnostics",
+      "selectedHardwareId": "",
+      "selectedName": "",
       "collapsedSections": []
     },
-    "RawMessages!28hnlsl": {
+    "RosOut!simulation-logs": {
+      "searchTerms": [],
+      "minLogLevel": 1
+    },
+    "RosOut!debug-logs": {
+      "searchTerms": [],
+      "minLogLevel": 0
+    },
+    "SourceInfo!debug-source-info": {},
+    "RawMessages!debug-raw-gps": {
       "diffEnabled": false,
       "diffMethod": "custom",
       "diffTopicPath": "",
       "showFullMessageForDiff": false,
       "topicPath": "/gps/fix"
     },
-    "Tab!3h75d6h": {
-      "activeTabIdx": 1,
+    "RawMessages!debug-raw-fusion": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/fusion/odom"
+    },
+    "RawMessages!debug-raw-power": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/power"
+    },
+    "RawMessages!debug-raw-map": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/mowing_map"
+    },
+    "RawMessages!debug-raw-commands": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/cmd_vel_nav"
+    },
+    "Tab!debug-raw-tabs": {
+      "activeTabIdx": 0,
       "tabs": [
         {
-          "title": "settings",
+          "title": "GPS",
+          "layout": "RawMessages!debug-raw-gps"
+        },
+        {
+          "title": "Fusion",
+          "layout": "RawMessages!debug-raw-fusion"
+        },
+        {
+          "title": "Power",
+          "layout": "RawMessages!debug-raw-power"
+        },
+        {
+          "title": "Map",
+          "layout": "RawMessages!debug-raw-map"
+        },
+        {
+          "title": "Commands",
+          "layout": "RawMessages!debug-raw-commands"
+        }
+      ]
+    },
+    "Markdown!manual-actions": {
+      "markdown": "# Manual controls\n\nUse this tab for explicit operator actions only. The Debug tab is observation-only.\n\nCommon action names in this stack:\n\n- `/record_area_boundary`\n- `/record_docking_station`\n- `/dock_robot_nearest`\n- `/dock_robot_to`\n- `/dock_robot`\n\nFoxglove provides built-in Publish and Service Call panels. If your Foxglove build does not include a ROS action client panel, call actions from the ROS CLI or add a dedicated action-client extension."
+    },
+    "Publish!manual-stop": {
+      "topicName": "/cmd_vel_joy",
+      "topic": "/cmd_vel_joy",
+      "schemaName": "geometry_msgs/msg/TwistStamped",
+      "message": "{\n  \"header\": {\n    \"frame_id\": \"base_link\"\n  },\n  \"twist\": {\n    \"linear\": { \"x\": 0, \"y\": 0, \"z\": 0 },\n    \"angular\": { \"x\": 0, \"y\": 0, \"z\": 0 }\n  }\n}",
+      "buttonTitle": "Publish stop",
+      "buttonText": "Publish stop",
+      "buttonTooltip": "Publish zero TwistStamped to /cmd_vel_joy",
+      "buttonColor": "#dc2626",
+      "editingMode": false,
+      "foxglovePanelTitle": "Stop command"
+    },
+    "Publish!manual-command-template": {
+      "topicName": "/cmd_vel_joy",
+      "topic": "/cmd_vel_joy",
+      "schemaName": "geometry_msgs/msg/TwistStamped",
+      "message": "{\n  \"header\": {\n    \"frame_id\": \"base_link\"\n  },\n  \"twist\": {\n    \"linear\": { \"x\": 0, \"y\": 0, \"z\": 0 },\n    \"angular\": { \"x\": 0, \"y\": 0, \"z\": 0 }\n  }\n}",
+      "buttonTitle": "Publish command",
+      "buttonText": "Publish command",
+      "buttonTooltip": "Edit and publish a TwistStamped command to /cmd_vel_joy",
+      "buttonColor": "#2563eb",
+      "editingMode": true,
+      "foxglovePanelTitle": "Command template"
+    },
+    "Service Call!manual-find-dock": {
+      "serviceName": "/find_nearest_docking_station",
+      "request": "{}",
+      "requestText": "{}",
+      "layout": "horizontal",
+      "editingMode": true,
+      "timeout": 5,
+      "buttonTitle": "Find dock",
+      "buttonText": "Find dock",
+      "buttonTooltip": "Call /find_nearest_docking_station",
+      "buttonColor": "#2563eb",
+      "foxglovePanelTitle": "Find nearest dock"
+    },
+    "Service Call!manual-area-coverage": {
+      "serviceName": "/area_coverage",
+      "request": "{\n  \"area_id\": \"\",\n  \"with_exclusions\": true,\n  \"headland_loops\": 1,\n  \"swath_angle\": 0\n}",
+      "requestText": "{\n  \"area_id\": \"\",\n  \"with_exclusions\": true,\n  \"headland_loops\": 1,\n  \"swath_angle\": 0\n}",
+      "layout": "vertical",
+      "editingMode": true,
+      "timeout": 10,
+      "buttonTitle": "Generate coverage",
+      "buttonText": "Generate coverage",
+      "buttonTooltip": "Requires coverage_server to be running",
+      "buttonColor": "#16a34a",
+      "foxglovePanelTitle": "Coverage service"
+    },
+    "Service Call!manual-set-recording": {
+      "serviceName": "/set_recording_mode",
+      "request": "{\n  \"data\": true\n}",
+      "requestText": "{\n  \"data\": true\n}",
+      "layout": "vertical",
+      "editingMode": true,
+      "timeout": 5,
+      "buttonTitle": "Set recording mode",
+      "buttonText": "Set recording mode",
+      "buttonTooltip": "Available during active /record_area_boundary action",
+      "buttonColor": "#ca8a04",
+      "foxglovePanelTitle": "Recording mode"
+    },
+    "Service Call!manual-add-boundary-point": {
+      "serviceName": "/add_boundary_point",
+      "request": "{}",
+      "requestText": "{}",
+      "layout": "horizontal",
+      "editingMode": false,
+      "timeout": 5,
+      "buttonTitle": "Add boundary point",
+      "buttonText": "Add boundary point",
+      "buttonTooltip": "Available during active /record_area_boundary action",
+      "buttonColor": "#ca8a04",
+      "foxglovePanelTitle": "Add boundary point"
+    },
+    "Service Call!manual-finish-area-recording": {
+      "serviceName": "/finish_area_recording",
+      "request": "{}",
+      "requestText": "{}",
+      "layout": "horizontal",
+      "editingMode": false,
+      "timeout": 10,
+      "buttonTitle": "Finish area",
+      "buttonText": "Finish area",
+      "buttonTooltip": "Available during active /record_area_boundary action",
+      "buttonColor": "#16a34a",
+      "foxglovePanelTitle": "Finish area recording"
+    },
+    "Service Call!manual-remove-area": {
+      "serviceName": "/remove_area",
+      "request": "{\n  \"id\": \"\"\n}",
+      "requestText": "{\n  \"id\": \"\"\n}",
+      "layout": "vertical",
+      "editingMode": true,
+      "timeout": 10,
+      "buttonTitle": "Remove area",
+      "buttonText": "Remove area",
+      "buttonTooltip": "Call /remove_area with an area id",
+      "buttonColor": "#dc2626",
+      "foxglovePanelTitle": "Remove area"
+    },
+    "Service Call!manual-remove-dock": {
+      "serviceName": "/remove_docking_station",
+      "request": "{\n  \"id\": \"\"\n}",
+      "requestText": "{\n  \"id\": \"\"\n}",
+      "layout": "vertical",
+      "editingMode": true,
+      "timeout": 10,
+      "buttonTitle": "Remove dock",
+      "buttonText": "Remove dock",
+      "buttonTooltip": "Call /remove_docking_station with a docking station id",
+      "buttonColor": "#dc2626",
+      "foxglovePanelTitle": "Remove docking station"
+    },
+    "Parameters!manual-parameters": {
+      "title": "Parameters"
+    },
+    "Tab!openmower-dashboard": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "title": "Robot",
           "layout": {
-            "first": "Parameters!2tk0ho3",
-            "second": {
-              "first": "SourceInfo!f2w7h8",
-              "second": "RosOut!1anfqcv",
+            "first": {
+              "first": {
+                "first": "3D!robot-overview",
+                "second": "map!robot-gps",
+                "direction": "row",
+                "splitPercentage": 64
+              },
+              "second": {
+                "first": "Plot!robot-motion",
+                "second": "Plot!robot-power",
+                "direction": "row",
+                "splitPercentage": 50
+              },
               "direction": "column",
-              "splitPercentage": 49.780380673499266
+              "splitPercentage": 70
+            },
+            "second": {
+              "first": "joy-panel.Joystick!robot-joy",
+              "second": {
+                "first": {
+                  "first": "Gauge!robot-battery",
+                  "second": "Gauge!robot-voltage",
+                  "direction": "row",
+                  "splitPercentage": 50
+                },
+                "second": {
+                  "first": "Indicator!robot-charger",
+                  "second": "DiagnosticSummary!robot-diagnostics",
+                  "direction": "column",
+                  "splitPercentage": 25
+                },
+                "direction": "column",
+                "splitPercentage": 28
+              },
+              "direction": "column",
+              "splitPercentage": 18
             },
             "direction": "row",
-            "splitPercentage": 59.50834879406308
+            "splitPercentage": 80
           }
         },
         {
-          "title": "3D",
+          "title": "Simulation",
           "layout": {
-            "first": {
-              "first": "3D!2gz3kf4",
-              "second": "map!3i1j9xz",
-              "direction": "row",
-              "splitPercentage": 83.8126159554731
-            },
+            "first": "foxglove-webots-extension.Webots!simulation-webots",
             "second": {
-              "first": "virtual-joystick.Virtual Joystick!1bz242v",
+              "first": {
+                "first": "3D!simulation-ros",
+                "second": "map!simulation-gps",
+                "direction": "row",
+                "splitPercentage": 62
+              },
               "second": {
                 "first": {
-                  "first": "Gauge!1nkddo2",
+                  "first": "joy-panel.Joystick!simulation-joy",
                   "second": {
-                    "first": "Indicator!1otv6hv",
-                    "second": "Plot!1rdecvu",
-                    "direction": "row"
+                    "first": "Gauge!simulation-battery",
+                    "second": "Indicator!simulation-charger",
+                    "direction": "column",
+                    "splitPercentage": 55
                   },
-                  "direction": "column"
+                  "direction": "row",
+                  "splitPercentage": 45
                 },
                 "second": {
+                  "first": "Plot!simulation-commands",
+                  "second": "Plot!simulation-power",
                   "direction": "row",
-                  "second": "RawMessages!28hnlsl",
-                  "first": {
-                    "direction": "row",
-                    "second": "DiagnosticStatusPanel!42w5qw9",
-                    "first": "DiagnosticSummary!dqya88",
-                    "splitPercentage": 57.19063545150501
-                  },
-                  "splitPercentage": 69.26640926640925
+                  "splitPercentage": 55
                 },
-                "direction": "row",
-                "splitPercentage": 25.36023054755044
+                "direction": "column",
+                "splitPercentage": 42
               },
-              "direction": "row",
-              "splitPercentage": 19.52690166975881
+              "direction": "column",
+              "splitPercentage": 58
             },
-            "direction": "column",
-            "splitPercentage": 62.29868228404099
+            "direction": "row",
+            "splitPercentage": 56
+          }
+        },
+        {
+          "title": "Debug",
+          "layout": {
+            "first": {
+              "first": "3D!debug-geometry",
+              "second": {
+                "first": "Plot!debug-fusion",
+                "second": "Plot!debug-gps",
+                "direction": "row",
+                "splitPercentage": 50
+              },
+              "direction": "column",
+              "splitPercentage": 64
+            },
+            "second": {
+              "first": {
+                "first": "DiagnosticSummary!debug-diagnostics-summary",
+                "second": "DiagnosticStatusPanel!debug-diagnostics-status",
+                "direction": "row",
+                "splitPercentage": 38
+              },
+              "second": {
+                "first": "Tab!debug-raw-tabs",
+                "second": {
+                  "first": "RosOut!debug-logs",
+                  "second": "SourceInfo!debug-source-info",
+                  "direction": "row",
+                  "splitPercentage": 65
+                },
+                "direction": "column",
+                "splitPercentage": 58
+              },
+              "direction": "column",
+              "splitPercentage": 38
+            },
+            "direction": "row",
+            "splitPercentage": 58
+          }
+        },
+        {
+          "title": "Manual",
+          "layout": {
+            "first": {
+              "first": "Markdown!manual-actions",
+              "second": {
+                "first": "Publish!manual-stop",
+                "second": "Publish!manual-command-template",
+                "direction": "column",
+                "splitPercentage": 38
+              },
+              "direction": "column",
+              "splitPercentage": 44
+            },
+            "second": {
+              "first": {
+                "first": "Service Call!manual-find-dock",
+                "second": "Service Call!manual-area-coverage",
+                "direction": "row",
+                "splitPercentage": 42
+              },
+              "second": {
+                "first": {
+                  "first": "Service Call!manual-set-recording",
+                  "second": {
+                    "first": "Service Call!manual-add-boundary-point",
+                    "second": "Service Call!manual-finish-area-recording",
+                    "direction": "column",
+                    "splitPercentage": 50
+                  },
+                  "direction": "row",
+                  "splitPercentage": 55
+                },
+                "second": {
+                  "first": {
+                    "first": "Service Call!manual-remove-area",
+                    "second": "Service Call!manual-remove-dock",
+                    "direction": "row",
+                    "splitPercentage": 50
+                  },
+                  "second": "Parameters!manual-parameters",
+                  "direction": "column",
+                  "splitPercentage": 45
+                },
+                "direction": "column",
+                "splitPercentage": 50
+              },
+              "direction": "column",
+              "splitPercentage": 34
+            },
+            "direction": "row",
+            "splitPercentage": 34
           }
         }
       ]
     }
   },
   "globalVariables": {
-    "globalVariable": 1
+    "webotsPort": 1234
   },
-  "userNodes": {
-    "0a710a06-464e-4f15-a8cf-ab93711d06b4": {
-      "sourceCode": "// The ./types module provides helper types for your Input events and messages.\nimport { Input, Message } from \"./types\";\n\n// Your script can output well-known message types, any of your custom message types, or\n// complete custom message types.\n//\n// Use `Message` to access types from the schemas defined in your data source:\n// type Twist = Message<\"geometry_msgs/Twist\">;\n//\n// Import from the @foxglove/schemas package to use foxglove schema types:\n// import { Pose, LocationFix } from \"@foxglove/schemas\";\n//\n// Conventionally, it's common to make a _type alias_ for your script's output type\n// and use that type name as the return type for your script function.\n// Here we've called the type `Output` but you can pick any type name.\ntype Output = {\n  hello: string;\n};\n\n// These are the topics your script \"subscribes\" to. Studio will invoke your script function\n// when any message is received on one of these topics.\nexport const inputs = [\"/input/topic\"];\n\n// Any output your script produces is \"published\" to this topic. Published messages are only visible within Studio, not to your original data source.\nexport const output = \"/studio_script/output_topic\";\n\n// This function is called with messages from your input topics.\n// The first argument is an event with the topic, receive time, and message.\n// Use the `Input<...>` helper to get the correct event type for your input topic messages.\nexport default function script(event: Input<\"/input/topic\">): Output {\n  return {\n    hello: \"world!\",\n  };\n};",
-      "name": "0a710a06"
-    }
-  },
+  "userNodes": {},
   "playbackConfig": {
     "speed": 1
   },
-  "layout": "Tab!3h75d6h"
+  "layout": "Tab!openmower-dashboard"
 }

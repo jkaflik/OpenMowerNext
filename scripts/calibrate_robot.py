@@ -911,7 +911,11 @@ def build_recommendations(
     recommendations: List[Dict[str, Any]] = []
     summary = config_value_summary(config)
     current_radius = summary["controllers.wheel_radius"] or summary["hardware.wheel.radius"]
-    current_separation = summary["controllers.wheel_separation"]
+    current_separation = None
+    if summary["hardware.wheel.offset_y"] is not None:
+        current_separation = 2.0 * abs(float(summary["hardware.wheel.offset_y"]))
+    elif summary["controllers.wheel_separation"] is not None:
+        current_separation = summary["controllers.wheel_separation"]
     current_gear_ratio = summary["hardware.wheel.gear_ratio"]
 
     if geometry:
@@ -954,15 +958,6 @@ def build_recommendations(
         sep_scale = median(sep_scales)
         if sep_scale is not None and current_separation and 0.5 <= sep_scale <= 1.5:
             separation = round(float(current_separation) * sep_scale, 5)
-            recommendations.append(
-                make_recommendation(
-                    "controllers.yaml",
-                    ["diff_drive_base_controller", "ros__parameters", "wheel_separation"],
-                    current_separation,
-                    separation,
-                    "Wheel yaw divided by IMU/fusion yaw during in-place rotation.",
-                )
-            )
             offset_y = round(separation / 2.0, 5)
             recommendations.append(
                 make_recommendation(
@@ -970,7 +965,7 @@ def build_recommendations(
                     ["wheel", "offset", 1],
                     summary["hardware.wheel.offset_y"],
                     offset_y,
-                    "Keep URDF wheel offset consistent with calibrated separation.",
+                    "Wheel separation is derived as 2 * abs(wheel.offset[1]) in launch files.",
                 )
             )
 
