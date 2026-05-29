@@ -1,0 +1,232 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "../protos/OpenMower.proto"
+EXTERNPROTO "../protos/DockingStation.proto"
+EXTERNPROTO "../protos/GnssDegradationZone.proto"
+EXTERNPROTO "../protos/GardenBuilding.proto"
+EXTERNPROTO "../protos/GardenTree.proto"
+EXTERNPROTO "../protos/Curb.proto"
+EXTERNPROTO "../protos/TerrainPatch.proto"
+EXTERNPROTO "../protos/FrictionPatch.proto"
+
+WorldInfo {
+  title "OpenMowerNext stress garden"
+  basicTimeStep 10
+  coordinateSystem "ENU"
+  gpsCoordinateSystem "WGS84"
+  gpsReference -22.9 -43.2 0
+  contactProperties [
+    ContactProperties {
+      material1 "mower_wheel"
+      material2 "short_grass"
+      coulombFriction [
+        1.0
+      ]
+    }
+    ContactProperties {
+      material1 "mower_wheel"
+      material2 "loose_soil"
+      coulombFriction [
+        0.65
+      ]
+    }
+    ContactProperties {
+      material1 "mower_wheel"
+      material2 "mud"
+      coulombFriction [
+        0.50
+      ]
+    }
+  ]
+}
+Viewpoint {
+  orientation -0.39151 0.47828 0.786181 1.28795
+  position -5.8 -8.6 5.8
+  follow "openmower"
+}
+Background {
+  skyColor [
+    0.39 0.55 0.76
+  ]
+}
+DirectionalLight {
+  direction -0.35 -0.45 -1
+  intensity 0.95
+}
+Solid {
+  translation -12 -9 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.09 0.34 0.08
+        roughness 1
+        metalness 0
+      }
+      geometry DEF STRESS_GRASS_TERRAIN ElevationGrid {
+        xDimension 13
+        yDimension 10
+        xSpacing 2
+        ySpacing 2
+        thickness 0.45
+        height [
+          0.020 0.040 0.024 -0.020 -0.055 -0.030 0.015 0.036 0.020 -0.020 -0.035 -0.006 0.028
+          0.035 0.065 0.040 -0.010 -0.070 -0.052 -0.008 0.030 0.026 -0.014 -0.040 -0.018 0.018
+          0.010 0.030 0.018 -0.050 -0.105 -0.080 -0.022 0.020 0.032 0.006 -0.030 -0.036 -0.004
+          -0.030 -0.015 0.026 0.010 -0.040 -0.080 -0.050 0.020 0.058 0.040 -0.006 -0.055 -0.028
+          -0.052 -0.030 0.030 0.075 0.045 -0.018 -0.032 0.008 0.062 0.060 0.018 -0.050 -0.042
+          -0.040 -0.012 0.034 0.090 0.070 0.014 -0.024 -0.024 0.026 0.052 0.038 -0.012 -0.020
+          -0.004 0.020 0.032 0.052 0.030 -0.005 -0.070 -0.120 -0.075 -0.010 0.024 0.034 0.020
+          0.024 0.048 0.032 0.004 -0.028 -0.050 -0.100 -0.155 -0.105 -0.030 0.016 0.032 0.026
+          0.036 0.060 0.035 -0.012 -0.045 -0.062 -0.076 -0.105 -0.064 -0.010 0.022 0.028 0.016
+          0.026 0.042 0.025 -0.018 -0.050 -0.040 -0.008 0.018 0.020 0.000 0.004 0.014 0.010
+        ]
+      }
+    }
+  ]
+  name "stress_grass_floor"
+  contactMaterial "short_grass"
+  boundingObject USE STRESS_GRASS_TERRAIN
+}
+TerrainPatch {
+  translation -2.8 -2.2 0.025
+  rotation 1 0 0 0.12
+  name "steeper_slope"
+  size 3.2 1.4 0.05
+  color 0.13 0.43 0.10
+}
+TerrainPatch {
+  translation -0.9 -0.9 0.022
+  rotation 0 0 1 0.25
+  name "larger_mound"
+  size 1.3 0.95 0.045
+  color 0.13 0.44 0.11
+}
+TerrainPatch {
+  translation 1.2 -2.55 0.007
+  rotation 0 0 1 -0.22
+  name "deep_rut_left"
+  size 2.5 0.22 0.014
+  color 0.17 0.20 0.06
+}
+FrictionPatch {
+  translation 1.2 -2.55 0.001
+  rotation 0 0 1 -0.22
+  name "deep_rut_left_friction"
+  size 2.5 0.22 0.002
+  contactMaterial "loose_soil"
+}
+TerrainPatch {
+  translation 1.2 -2.95 0.007
+  rotation 0 0 1 -0.22
+  name "deep_rut_right"
+  size 2.5 0.22 0.014
+  color 0.17 0.20 0.06
+}
+FrictionPatch {
+  translation 1.2 -2.95 0.001
+  rotation 0 0 1 -0.22
+  name "deep_rut_right_friction"
+  size 2.5 0.22 0.002
+  contactMaterial "loose_soil"
+}
+TerrainPatch {
+  translation -3.1 2.4 0.01
+  name "muddy_patch"
+  size 2.6 1.6 0.02
+  color 0.07 0.15 0.05
+  roughness 0.35
+}
+FrictionPatch {
+  translation -3.1 2.4 0.001
+  name "muddy_patch_friction"
+  size 2.6 1.6 0.002
+  contactMaterial "mud"
+}
+Curb {
+  translation -4.2 0 0.035
+  name "west_curb"
+  size 0.16 7.4 0.07
+}
+Curb {
+  translation 0 -3.7 0.035
+  name "south_curb"
+  size 8.6 0.16 0.07
+}
+Curb {
+  translation 0 3.7 0.035
+  name "north_curb"
+  size 8.6 0.16 0.07
+}
+Curb {
+  translation 4.2 -1.15 0.035
+  name "east_curb_narrow_passage"
+  size 0.16 5.1 0.07
+}
+GardenBuilding {
+  translation 3.65 1.75 0.9
+  name "house_wall"
+  size 2.8 3.2 1.8
+}
+GardenTree {
+  translation -2.7 1.8 0
+  name "large_tree"
+}
+GardenTree {
+  translation 0.9 -1.9 0
+  name "middle_tree"
+}
+GardenTree {
+  translation 2.7 -0.3 0
+  name "narrow_passage_tree"
+}
+DockingStation {
+  translation 1.5 1.5 0
+  name "docking_station"
+}
+OpenMower {
+  translation 0 0 0.0925
+  rotation 0 0 1 0
+  name "openmower"
+  controller "<extern>"
+  supervisor TRUE
+}
+GnssDegradationZone {
+  translation 2.55 1.65 0.03
+  name "dock_wall_harsh_multipath"
+  size 1.9 3.8 0.06
+  metadata "shape=box;model=dock_wall;sigmaXY=0.22;biasX=-0.28;biasY=0.10;dropoutProbability=0.002;covarianceXY=0.18;edgeWidth=0.65;driftTimeConstant=9"
+  color 1 0.40 0.08
+}
+GnssDegradationZone {
+  translation 3.25 1.75 0.03
+  name "building_harsh_multipath"
+  size 2.3 4.8 0.06
+  metadata "shape=box;model=multipath;sigmaXY=0.32;biasX=-0.45;biasY=0.16;dropoutProbability=0.004;covarianceXY=0.30;edgeWidth=0.75;driftTimeConstant=10"
+  color 1 0.10 0.05
+}
+GnssDegradationZone {
+  translation -2.7 1.8 0.03
+  name "large_tree_gnss_shadow"
+  size 3.6 3.6 0.06
+  metadata "shape=circle;radius=1.8;model=tree_canopy;sigmaXY=0.35;dropoutProbability=0.006;covarianceXY=0.36;edgeWidth=0.85;driftTimeConstant=12"
+  color 0.12 0.75 0.18
+}
+GnssDegradationZone {
+  translation 0.9 -1.9 0.03
+  name "middle_tree_gnss_shadow"
+  size 2.8 2.8 0.06
+  metadata "shape=circle;radius=1.4;model=tree_canopy;sigmaXY=0.26;biasX=0.08;dropoutProbability=0.003;covarianceXY=0.22;edgeWidth=0.65;driftTimeConstant=11"
+  color 0.12 0.75 0.18
+}
+GnssDegradationZone {
+  translation 2.7 -0.3 0.03
+  name "narrow_passage_gnss_shadow"
+  size 2.4 2.4 0.06
+  metadata "shape=circle;radius=1.2;model=tree_canopy;sigmaXY=0.24;biasY=-0.08;dropoutProbability=0.002;covarianceXY=0.18;edgeWidth=0.55;driftTimeConstant=10"
+  color 0.12 0.75 0.18
+}
+Robot {
+  name "Ros2Supervisor"
+  controller "<extern>"
+  supervisor TRUE
+}
