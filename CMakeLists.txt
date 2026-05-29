@@ -81,6 +81,12 @@ install(
         RENAME calibrate_robot
 )
 
+install(
+        PROGRAMS scripts/webots_world_to_geojson.py
+        DESTINATION lib/${PROJECT_NAME}
+        RENAME webots_world_to_geojson
+)
+
 if (BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_pytest REQUIRED)
@@ -100,6 +106,7 @@ if (BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 
     ament_add_pytest_test(calibrate_robot test/test_calibrate_robot.py TIMEOUT 30)
+    ament_add_pytest_test(webots_world_to_geojson test/test_webots_world_to_geojson.py TIMEOUT 30)
 
     if (OPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS)
         ament_add_pytest_test(webots_smoke test/integration/test_webots_smoke.py TIMEOUT 180)
