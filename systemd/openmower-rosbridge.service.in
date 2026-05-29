@@ -6,6 +6,7 @@ After=default.target
 Type=simple
 WorkingDirectory=@WORKSPACE@
 Environment=ROS_DISTRO=@ROS_DISTRO@
+Environment=ROS_AUTOMATIC_DISCOVERY_RANGE=@ROS_AUTOMATIC_DISCOVERY_RANGE@
 Environment=ROSBRIDGE_ADDRESS=@ROSBRIDGE_ADDRESS@
 Environment=ROSBRIDGE_PORT=@ROSBRIDGE_PORT@
 ExecStart=/bin/bash @WORKSPACE@/utils/run-rosbridge.sh
