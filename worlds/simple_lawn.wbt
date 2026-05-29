@@ -4,7 +4,7 @@ EXTERNPROTO "../protos/OpenMower.proto"
 EXTERNPROTO "../protos/DockingStation.proto"
 
 WorldInfo {
-  title "OpenMowerNext Webots simulation"
+  title "OpenMowerNext simple lawn"
   basicTimeStep 10
   coordinateSystem "ENU"
   gpsCoordinateSystem "WGS84"

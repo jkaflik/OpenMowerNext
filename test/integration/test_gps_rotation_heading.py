@@ -97,71 +97,39 @@ def create_randomized_world(tmp_path: Path):
     start_yaw = rng.uniform(-math.pi, math.pi)
 
     root = repo_root()
-    openmower_proto = (root / "protos" / "OpenMower.proto").as_posix()
-    docking_proto = (root / "protos" / "DockingStation.proto").as_posix()
     world_path = tmp_path / f"gps_rotation_heading_{seed}.wbt"
-    world_path.write_text(
-        f"""#VRML_SIM R2025a utf8
-
-EXTERNPROTO \"{openmower_proto}\"
-EXTERNPROTO \"{docking_proto}\"
-
-WorldInfo {{
-  title \"OpenMowerNext GPS rotation heading test\"
-  basicTimeStep 10
-  coordinateSystem \"ENU\"
-  gpsCoordinateSystem \"WGS84\"
-  gpsReference -22.9 -43.2 0
-}}
-Viewpoint {{
-  orientation -0.330491 0.451759 0.828566 1.32217
-  position -2.3 -4.4 3.0
-  follow \"openmower\"
-}}
-Background {{
-  skyColor [
-    0.45 0.62 0.85
-  ]
-}}
-DirectionalLight {{
-  direction -0.4 -0.2 -1
-  intensity 1
-}}
-Solid {{
-  translation 0 0 -0.005
-  children [
-    Shape {{
-      appearance PBRAppearance {{
-        baseColor 0.12 0.42 0.12
-        roughness 1
-        metalness 0
-      }}
-      geometry DEF FLOOR_BOX Box {{
-        size 20 20 0.01
-      }}
-    }}
-  ]
-  name \"grass_floor\"
-  boundingObject USE FLOOR_BOX
-}}
-OpenMower {{
+    content = (root / "worlds" / "simple_lawn.wbt").read_text(encoding="utf-8")
+    content = content.replace(
+        'EXTERNPROTO "../protos/OpenMower.proto"',
+        f'EXTERNPROTO "{(root / "protos" / "OpenMower.proto").as_posix()}"',
+    )
+    content = content.replace(
+        'EXTERNPROTO "../protos/DockingStation.proto"',
+        f'EXTERNPROTO "{(root / "protos" / "DockingStation.proto").as_posix()}"',
+    )
+    content = content.replace(
+        'title "OpenMowerNext simple lawn"',
+        f'title "OpenMowerNext GPS rotation heading test seed {seed}"',
+        1,
+    )
+    content = content.replace(
+        """OpenMower {
+  translation 0 0 0.0925
+  rotation 0 0 1 0
+  name "openmower"
+  controller "<extern>"
+  supervisor TRUE
+}""",
+        f"""OpenMower {{
   translation {start_x:.6f} {start_y:.6f} 0.0925
   rotation 0 0 1 {start_yaw:.9f}
-  name \"openmower\"
-  controller \"<extern>\"
-}}
-DockingStation {{
-  translation 1.5 1.5 0
-  name \"docking_station\"
-}}
-Robot {{
-  name \"Ros2Supervisor\"
-  controller \"<extern>\"
+  name "openmower"
+  controller "<extern>"
   supervisor TRUE
-}}
-""",
-        encoding="utf-8",
+}}""",
+        1,
     )
+    world_path.write_text(content, encoding="utf-8")
     return world_path, (start_x, start_y, start_yaw), seed
 
 

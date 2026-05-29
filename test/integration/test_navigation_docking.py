@@ -111,6 +111,7 @@ def start_simulation(log_path: Path, env: dict[str, str]):
             "gui:=false",
             "mode:=realtime",
             "enable_foxglove:=false",
+            "world:=simple_lawn.wbt",
             f"webots_port:={env['WEBOTS_PORT']}",
         ],
         stdout=log_file,

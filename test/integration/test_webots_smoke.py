@@ -78,6 +78,7 @@ def start_simulation(log_path: Path, env: dict[str, str]):
             "sim.launch.py",
             "gui:=false",
             "mode:=fast",
+            "world:=simple_lawn.wbt",
             f"webots_port:={env['WEBOTS_PORT']}",
         ],
         stdout=log_file,

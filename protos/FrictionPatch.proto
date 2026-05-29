@@ -1,0 +1,20 @@
+#VRML_SIM R2025a utf8
+
+PROTO FrictionPatch [
+  field SFVec3f    translation     0 0 0.001
+  field SFRotation rotation        0 0 1 0
+  field SFString   name            "friction_patch"
+  field SFVec3f    size            1 1 0.002
+  field SFString   contactMaterial "short_grass"
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    contactMaterial IS contactMaterial
+    boundingObject Box {
+      size IS size
+    }
+  }
+}
