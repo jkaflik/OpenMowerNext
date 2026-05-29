@@ -1,6 +1,7 @@
 REMOTE_HOST ?= 10.0.250.5
 REMOTE_USER ?= openmower
 ROS_DISTRO ?= jazzy
+ROS_AUTOMATIC_DISCOVERY_RANGE ?= LOCALHOST
 ROS_LOG_DIR = log/
 OMDEV_HOST ?= $(REMOTE_HOST)
 OMDEV_USER ?= $(USER)
@@ -77,10 +78,10 @@ build-release:
 	colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 sim:
-	bash -lc 'if [ -z "$${WEBOTS_HOME}" ] && [ -d "$${HOME}/.ros/webotsR2025a/webots" ]; then export WEBOTS_HOME="$${HOME}/.ros/webotsR2025a/webots"; fi && if [ -z "$${DISPLAY}" ] && [ -z "$${WEBOTS_OFFSCREEN}" ]; then export WEBOTS_OFFSCREEN=1; fi && source /opt/ros/$${ROS_DISTRO:-jazzy}/setup.bash && source install/setup.bash && set -a && source .devcontainer/default.env && set +a && ros2 launch open_mower_next sim.launch.py webots_stream:="$(WEBOTS_STREAM)" webots_port:="$(WEBOTS_PORT)"'
+	ROS_AUTOMATIC_DISCOVERY_RANGE="$(ROS_AUTOMATIC_DISCOVERY_RANGE)" bash -lc 'if [ -z "$${WEBOTS_HOME}" ] && [ -d "$${HOME}/.ros/webotsR2025a/webots" ]; then export WEBOTS_HOME="$${HOME}/.ros/webotsR2025a/webots"; fi && if [ -z "$${DISPLAY}" ] && [ -z "$${WEBOTS_OFFSCREEN}" ]; then export WEBOTS_OFFSCREEN=1; fi && source /opt/ros/$${ROS_DISTRO:-jazzy}/setup.bash && source install/setup.bash && set -a && source .devcontainer/default.env && set +a && ros2 launch open_mower_next sim.launch.py webots_stream:="$(WEBOTS_STREAM)" webots_port:="$(WEBOTS_PORT)"'
 
 rosbridge:
-	ROS_DISTRO="$(ROS_DISTRO)" ROSBRIDGE_ADDRESS="$(ROSBRIDGE_ADDRESS)" ROSBRIDGE_PORT="$(ROSBRIDGE_PORT)" bash utils/run-rosbridge.sh
+	ROS_DISTRO="$(ROS_DISTRO)" ROS_AUTOMATIC_DISCOVERY_RANGE="$(ROS_AUTOMATIC_DISCOVERY_RANGE)" ROSBRIDGE_ADDRESS="$(ROSBRIDGE_ADDRESS)" ROSBRIDGE_PORT="$(ROSBRIDGE_PORT)" bash utils/run-rosbridge.sh
 
 rosbridge-deps:
 	sudo apt update
@@ -88,7 +89,7 @@ rosbridge-deps:
 
 rosbridge-service-install:
 	install -d "$(SYSTEMD_USER_DIR)"
-	sed -e 's|@WORKSPACE@|$(CURDIR)|g' -e 's|@ROS_DISTRO@|$(ROS_DISTRO)|g' -e 's|@ROSBRIDGE_ADDRESS@|$(ROSBRIDGE_ADDRESS)|g' -e 's|@ROSBRIDGE_PORT@|$(ROSBRIDGE_PORT)|g' systemd/openmower-rosbridge.service.in > "$(SYSTEMD_USER_DIR)/$(ROSBRIDGE_SERVICE)"
+	sed -e 's|@WORKSPACE@|$(CURDIR)|g' -e 's|@ROS_DISTRO@|$(ROS_DISTRO)|g' -e 's|@ROS_AUTOMATIC_DISCOVERY_RANGE@|$(ROS_AUTOMATIC_DISCOVERY_RANGE)|g' -e 's|@ROSBRIDGE_ADDRESS@|$(ROSBRIDGE_ADDRESS)|g' -e 's|@ROSBRIDGE_PORT@|$(ROSBRIDGE_PORT)|g' systemd/openmower-rosbridge.service.in > "$(SYSTEMD_USER_DIR)/$(ROSBRIDGE_SERVICE)"
 	systemctl --user daemon-reload
 	@printf 'Installed %s in %s\n' "$(ROSBRIDGE_SERVICE)" "$(SYSTEMD_USER_DIR)"
 
@@ -108,7 +109,7 @@ rosbridge-service-logs:
 	journalctl --user -u "$(ROSBRIDGE_SERVICE)" -f
 
 foxglove:
-	ROS_DISTRO="$(ROS_DISTRO)" FOXGLOVE_ADDRESS="$(FOXGLOVE_ADDRESS)" FOXGLOVE_PORT="$(FOXGLOVE_PORT)" FOXGLOVE_USE_SIM_TIME="$(FOXGLOVE_USE_SIM_TIME)" bash utils/run-foxglove.sh
+	ROS_DISTRO="$(ROS_DISTRO)" ROS_AUTOMATIC_DISCOVERY_RANGE="$(ROS_AUTOMATIC_DISCOVERY_RANGE)" FOXGLOVE_ADDRESS="$(FOXGLOVE_ADDRESS)" FOXGLOVE_PORT="$(FOXGLOVE_PORT)" FOXGLOVE_USE_SIM_TIME="$(FOXGLOVE_USE_SIM_TIME)" bash utils/run-foxglove.sh
 
 foxglove-deps:
 	sudo apt update
@@ -116,7 +117,7 @@ foxglove-deps:
 
 foxglove-service-install:
 	install -d "$(SYSTEMD_USER_DIR)"
-	sed -e 's|@WORKSPACE@|$(CURDIR)|g' -e 's|@ROS_DISTRO@|$(ROS_DISTRO)|g' -e 's|@FOXGLOVE_ADDRESS@|$(FOXGLOVE_ADDRESS)|g' -e 's|@FOXGLOVE_PORT@|$(FOXGLOVE_PORT)|g' -e 's|@FOXGLOVE_USE_SIM_TIME@|$(FOXGLOVE_USE_SIM_TIME)|g' systemd/openmower-foxglove.service.in > "$(SYSTEMD_USER_DIR)/$(FOXGLOVE_SERVICE)"
+	sed -e 's|@WORKSPACE@|$(CURDIR)|g' -e 's|@ROS_DISTRO@|$(ROS_DISTRO)|g' -e 's|@ROS_AUTOMATIC_DISCOVERY_RANGE@|$(ROS_AUTOMATIC_DISCOVERY_RANGE)|g' -e 's|@FOXGLOVE_ADDRESS@|$(FOXGLOVE_ADDRESS)|g' -e 's|@FOXGLOVE_PORT@|$(FOXGLOVE_PORT)|g' -e 's|@FOXGLOVE_USE_SIM_TIME@|$(FOXGLOVE_USE_SIM_TIME)|g' systemd/openmower-foxglove.service.in > "$(SYSTEMD_USER_DIR)/$(FOXGLOVE_SERVICE)"
 	systemctl --user daemon-reload
 	@printf 'Installed %s in %s\n' "$(FOXGLOVE_SERVICE)" "$(SYSTEMD_USER_DIR)"
 
