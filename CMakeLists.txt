@@ -74,8 +74,15 @@ include(cmake/docking_helper.cmake)
 include(cmake/map_recorder.cmake)
 include(cmake/coverage_server.cmake)
 
+install(
+        PROGRAMS scripts/webots_world_to_geojson.py
+        DESTINATION lib/${PROJECT_NAME}
+        RENAME webots_world_to_geojson
+)
+
 if (BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_pytest REQUIRED)
     # the following line skips the linter which checks for copyrights
     # comment the line when a copyright and license is added to all source files
     set(ament_cmake_copyright_FOUND TRUE)
@@ -91,8 +98,9 @@ if (BUILD_TESTING)
     set(ament_cmake_xmllint_FOUND TRUE)
     ament_lint_auto_find_test_dependencies()
 
+    ament_add_pytest_test(webots_world_to_geojson test/test_webots_world_to_geojson.py TIMEOUT 30)
+
     if (OPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS)
-        find_package(ament_cmake_pytest REQUIRED)
         ament_add_pytest_test(webots_smoke test/integration/test_webots_smoke.py TIMEOUT 180)
         set_tests_properties(webots_smoke PROPERTIES LABELS integration RESOURCE_LOCK webots)
         ament_add_pytest_test(gps_rotation_heading test/integration/test_gps_rotation_heading.py TIMEOUT 360)
