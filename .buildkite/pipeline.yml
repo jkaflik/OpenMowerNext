@@ -1,0 +1,74 @@
+agents:
+  queue: "openmowernext-ci"
+
+env:
+  ROS_DISTRO: "jazzy"
+
+steps:
+  - label: "Unit"
+    key: "unit"
+    command: ".buildkite/scripts/ci-unit.sh"
+    timeout_in_minutes: 120
+    artifact_paths:
+      - "build/open_mower_next/test_results/**/*"
+      - "log/**/*"
+
+  - label: "Docs"
+    key: "docs"
+    command: ".buildkite/scripts/docs-build.sh"
+    timeout_in_minutes: 30
+    if_changed:
+      - "docs/**"
+      - ".buildkite/**"
+    artifact_paths:
+      - "docs/.vitepress/dist/**/*"
+
+  - label: "Terraform"
+    key: "terraform"
+    command: ".buildkite/scripts/terraform-validate.sh"
+    timeout_in_minutes: 20
+    if_changed:
+      - "infra/buildkite/**"
+
+  - label: "Runtime image"
+    key: "runtime-image"
+    command: ".buildkite/scripts/docker-build.sh runtime"
+    timeout_in_minutes: 180
+    if_changed:
+      - "Dockerfile"
+      - "Makefile"
+      - "package.xml"
+      - "custom_deps.yaml"
+      - "cmake/**"
+      - "config/**"
+      - "description/**"
+      - "launch/**"
+      - "maps/**"
+      - "protos/**"
+      - "src/**"
+      - "utils/**"
+      - "worlds/**"
+
+  - label: "Devcontainer image"
+    key: "devcontainer-image"
+    command: ".buildkite/scripts/docker-build.sh devcontainer"
+    timeout_in_minutes: 60
+    if_changed:
+      - ".devcontainer/**"
+
+  - label: "Integration"
+    key: "integration"
+    command: ".buildkite/scripts/ci-integration.sh"
+    agents:
+      queue: "openmowernext-webots"
+    timeout_in_minutes: 180
+    concurrency: 1
+    concurrency_group: "openmowernext/webots"
+    if: |
+      build.source == "ui" ||
+      build.source == "api" ||
+      build.source == "schedule" ||
+      build.pull_request.labels includes "integration"
+    artifact_paths:
+      - "build/open_mower_next/test_results/**/*"
+      - "log/**/*"
