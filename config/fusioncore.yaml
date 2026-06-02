@@ -31,6 +31,7 @@ fusioncore:
     gnss.lever_arm_z: 0.1
     gnss.track_heading_min_speed: 0.2
     gnss.track_heading_max_yaw_rate: 0.3
+    gnss.track_heading_max_yaw_delta: 0.15
     gnss.track_heading_min_dist: 5.0
     gnss.heading_observable_distance: 5.0
     gnss.rotation_heading_enabled: true

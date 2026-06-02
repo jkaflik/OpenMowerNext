@@ -1,0 +1,9 @@
+organization_slug = "kuba-kaflik"
+repository        = "https://github.com/jkaflik/OpenMowerNext.git"
+
+# Set to false if the Buildkite GitHub App is not connected to this repository yet.
+create_webhook = true
+
+# Personal plans may only allow LINUX_AMD64_2X4.
+ci_instance_shape     = "LINUX_AMD64_4X16"
+webots_instance_shape = "LINUX_AMD64_8X32"
