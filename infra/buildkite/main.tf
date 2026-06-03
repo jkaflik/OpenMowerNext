@@ -74,7 +74,7 @@ resource "buildkite_pipeline" "openmowernext" {
     use_step_key_as_commit_status  = true
 
     filter_enabled   = true
-    filter_condition = "build.source == \"ui\" || build.source == \"api\" || build.source == \"schedule\" || (build.source_event == \"push\" && build.branch == \"main\") || build.source_event == \"pull_request\" || build.source_event == \"merge_group\""
+    filter_condition = "build.source == \"ui\" || build.source == \"api\" || build.source == \"schedule\" || build.source_event == \"push\" || build.source_event == \"pull_request\" || build.source_event == \"merge_group\""
   }
 }
 
