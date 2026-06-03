@@ -9,7 +9,7 @@ docker run --rm \
   --env DEBIAN_FRONTEND=noninteractive \
   ros:jazzy \
   bash -lc '
-    set -euo pipefail
+    set -eo pipefail
 
     apt-get update
     apt-get install -y --no-install-recommends \
