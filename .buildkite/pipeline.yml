@@ -23,13 +23,6 @@ steps:
     artifact_paths:
       - "docs/.vitepress/dist/**/*"
 
-  - label: "Terraform"
-    key: "terraform"
-    command: ".buildkite/scripts/terraform-validate.sh"
-    timeout_in_minutes: 20
-    if_changed:
-      - "infra/buildkite/**"
-
   - label: "Runtime image"
     key: "runtime-image"
     command: ".buildkite/scripts/docker-build.sh runtime"

@@ -10,7 +10,7 @@ docker run --rm \
   --env WEBOTS_OFFSCREEN=1 \
   ros:jazzy \
   bash -lc '
-    set -euo pipefail
+    set -eo pipefail
 
     apt-get update
     apt-get install -y --no-install-recommends \
