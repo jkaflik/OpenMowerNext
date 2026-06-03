@@ -120,6 +120,17 @@ def create_degraded_world(tmp_path: Path) -> Path:
         1,
     )
     content = content.replace(
+        """DockingStation {
+  translation 1.5 1.5 0
+  name "docking_station"
+}""",
+        """DockingStation {
+  translation 4.5 4.5 0
+  name "docking_station"
+}""",
+        1,
+    )
+    content = content.replace(
         """OpenMower {
   translation 0 0 0.0925
   rotation 0 0 1 0
@@ -440,9 +451,11 @@ def wait_for_lifecycle_nodes_active(node, names: tuple[str, ...], timeout: float
     clients = {name: node.create_client(GetState, f"/{name}/get_state") for name in names}
     states = {name: "unknown" for name in names}
     deadline = time.monotonic() + timeout
+
     while time.monotonic() < deadline:
         check_process(process, log_path)
         all_active = True
+
         for name, client in clients.items():
             if not client.service_is_ready():
                 client.wait_for_service(timeout_sec=0.1)
@@ -450,14 +463,28 @@ def wait_for_lifecycle_nodes_active(node, names: tuple[str, ...], timeout: float
                 states[name] = "service_unavailable"
                 all_active = False
                 continue
+
             future = client.call_async(GetState.Request())
-            response = wait_for_future(node, future, 2.0, f"{name} lifecycle state", process, log_path)
+            query_deadline = time.monotonic() + 2.0
+            while time.monotonic() < query_deadline:
+                check_process(process, log_path)
+                if future.done():
+                    break
+                rclpy.spin_once(node, timeout_sec=0.1)
+            if not future.done():
+                states[name] = "state_query_timeout"
+                all_active = False
+                continue
+
+            response = future.result()
             states[name] = response.current_state.label or str(response.current_state.id)
             if response.current_state.id != State.PRIMARY_STATE_ACTIVE:
                 all_active = False
+
         if all_active:
             return
         spin_for(node, 0.5, process, log_path)
+
     pytest.fail(
         f"Timed out waiting for Nav2 lifecycle nodes to become active: {states}\n"
         f"{node.describe_state()}\n{read_log_tail(log_path)}"
