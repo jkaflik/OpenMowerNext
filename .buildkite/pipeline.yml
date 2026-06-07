@@ -61,7 +61,7 @@ steps:
       build.source == "ui" ||
       build.source == "api" ||
       build.source == "schedule" ||
-      build.pull_request.labels includes "integration"
+      build.source == "webhook"
     artifact_paths:
       - "build/open_mower_next/test_results/**/*"
       - "log/**/*"
