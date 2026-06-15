@@ -37,14 +37,6 @@ def generate_test_description():
                 'path': test_map,
             }],
         ),
-        launch_ros.actions.Node(
-            package='robot_localization',
-            executable='navsat_transform_node',
-            name='navsat_transform_node',
-            parameters=[{
-                'datum': [-22.9, -43.2, 0.0],
-            }],
-        ),
         launch_testing.actions.ReadyToTest()
     ])
 

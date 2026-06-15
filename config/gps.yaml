@@ -1,12 +1,13 @@
 ublox_f9p:
   ros__parameters:
-    frame_id: gps
+    frame_id: gnss_link
     child_frame_id: base_link
     port: /dev/ttyAMA1
     baudrate: 921600
     debug: false
     config:
       enabled: true
-      measurement_frequency: 5
+      measurement_frequency: 10
+      uart_output_rate: 10
     publish:
       motion_odometry: true

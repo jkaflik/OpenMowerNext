@@ -49,7 +49,7 @@ The simulator publishes or serves the same ROS-facing contract used by the rest 
 - `/gps/fix` from the Webots GPS device
 - `/imu/data_raw` from the Webots IMU plugin
 - `/diff_drive_base_controller/odom` from `diff_drive_controller`
-- `/power/charger_present`, `/power/charge_voltage`, and `/power` from `sim_node`
+- `/power/status` and `/power` from `sim_node`
 
 Velocity commands still flow through `twist_mux` to `/diff_drive_base_controller/cmd_vel`.
 

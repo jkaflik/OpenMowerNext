@@ -20,12 +20,12 @@ target_link_libraries(map_server_node "${cpp_typesupport_target}")
 
 ament_target_dependencies(map_server_node
         std_msgs
+        geographic_msgs
         geometry_msgs
         nav_msgs
         foxglove_msgs
         visualization_msgs
         rclcpp
-        robot_localization
         tf2
         tf2_geometry_msgs
         unique_identifier_msgs

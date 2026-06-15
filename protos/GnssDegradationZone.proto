@@ -1,0 +1,32 @@
+#VRML_SIM R2025a utf8
+
+PROTO GnssDegradationZone [
+  field SFVec3f    translation        0 0 0.02
+  field SFRotation rotation           0 0 1 0
+  field SFString   name               "gnss_degradation_zone"
+  field SFVec3f    size               1 1 0.04
+  field SFString   metadata           "shape=box;sigmaXY=0;biasX=0;biasY=0;dropoutProbability=0;covarianceXY=0;edgeWidth=0.25;driftTimeConstant=8"
+  field SFColor    color              0.1 0.35 1
+  field SFFloat    transparency       0.82
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    model IS metadata
+    children [
+      Shape {
+        appearance PBRAppearance {
+          baseColor IS color
+          transparency IS transparency
+          roughness 1
+          metalness 0
+        }
+        geometry Box {
+          size IS size
+        }
+      }
+    ]
+  }
+}

@@ -53,9 +53,6 @@ PROTO OpenMower [
         translation 0.32 0 0.1
         name "gps"
       }
-      InertialUnit {
-        name "inertial_unit"
-      }
       Gyro {
         name "gyro"
       }
@@ -94,6 +91,7 @@ PROTO OpenMower [
             }
           ]
           name "left_wheel"
+          contactMaterial "mower_wheel"
           boundingObject USE WHEEL_CYLINDER
           physics Physics {
             density -1
@@ -126,6 +124,7 @@ PROTO OpenMower [
             }
           ]
           name "right_wheel"
+          contactMaterial "mower_wheel"
           boundingObject USE WHEEL_CYLINDER
           physics Physics {
             density -1
@@ -190,6 +189,7 @@ PROTO OpenMower [
             }
           ]
           name "left_caster_wheel"
+          contactMaterial "mower_wheel"
           boundingObject USE CASTER_SPHERE
           physics Physics {
             density -1
@@ -210,6 +210,7 @@ PROTO OpenMower [
             }
           ]
           name "right_caster_wheel"
+          contactMaterial "mower_wheel"
           boundingObject USE CASTER_SPHERE
           physics Physics {
             density -1

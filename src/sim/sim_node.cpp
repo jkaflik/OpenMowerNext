@@ -5,6 +5,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
 
+#include <algorithm>
 #include <cmath>
 
 open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
@@ -14,11 +15,23 @@ open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-  charger_present_publisher_ =
-    this->create_publisher<std_msgs::msg::Bool>("/power/charger_present", 10);
   battery_state_publisher_ = this->create_publisher<sensor_msgs::msg::BatteryState>("/power", 10);
-  charge_voltage_publisher_ =
-    this->create_publisher<std_msgs::msg::Float32>("/power/charge_voltage", 10);
+  power_status_publisher_ =
+    this->create_publisher<omros2_firmware_msgs::msg::PowerStatus>("/power/status", 10);
+  gps_odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("/gps/odom", 10);
+
+  gps_odom_frame_ = this->declare_parameter<std::string>("gps_odom_frame", "map");
+  gps_child_frame_ = this->declare_parameter<std::string>("gps_child_frame", "gnss_link");
+  gps_speed_stddev_ = this->declare_parameter<double>("gps_speed_stddev", 0.05);
+
+  gps_fix_subscription_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
+    "/gps/fix", 10, [this](const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
+      gpsFixCallback(msg);
+    });
+  gps_speed_vector_subscription_ = this->create_subscription<geometry_msgs::msg::Vector3>(
+    "/gps/fix/speed_vector", 10, [this](const geometry_msgs::msg::Vector3::SharedPtr msg) {
+      gpsSpeedVectorCallback(msg);
+    });
 
   auto freq_ = this->declare_parameter<int32_t>("charger_simulation_freq", 15);
 
@@ -44,6 +57,10 @@ open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
   battery_state_msg_.power_supply_technology =
     sensor_msgs::msg::BatteryState::POWER_SUPPLY_TECHNOLOGY_LION;
   battery_state_msg_.present = true;
+  battery_state_msg_.percentage = std::clamp(
+    (battery_state_msg_.voltage - battery_state_min_voltage_) /
+      (battery_state_max_voltage_ - battery_state_min_voltage_),
+    0.0, 1.0);
 
   charger_timer_ = this->create_timer(
     std::chrono::milliseconds(1000 / freq_), [this] { chargerPresentSimulationCallback(); });
@@ -83,6 +100,37 @@ open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(get_logger(), "SimNode created with timer frequency: %d Hz", static_cast<int>(freq_));
 }
 
+void open_mower_next::sim::SimNode::gpsFixCallback(
+  const sensor_msgs::msg::NavSatFix::SharedPtr msg)
+{
+  has_gps_fix_ = true;
+  last_gps_fix_stamp_ = msg->header.stamp;
+}
+
+void open_mower_next::sim::SimNode::gpsSpeedVectorCallback(
+  const geometry_msgs::msg::Vector3::SharedPtr msg)
+{
+  nav_msgs::msg::Odometry odom;
+  if (has_gps_fix_) {
+    odom.header.stamp = last_gps_fix_stamp_;
+  } else {
+    odom.header.stamp = now();
+  }
+  odom.header.frame_id = gps_odom_frame_;
+  odom.child_frame_id = gps_child_frame_;
+  odom.twist.twist.linear.x = msg->x;
+  odom.twist.twist.linear.y = msg->y;
+  odom.twist.twist.linear.z = msg->z;
+
+  const double speed_var = gps_speed_stddev_ * gps_speed_stddev_;
+  odom.twist.covariance[0] = speed_var;
+  odom.twist.covariance[7] = speed_var;
+  odom.twist.covariance[14] = speed_var;
+  odom.twist.covariance[35] = -1.0;
+
+  gps_odom_publisher_->publish(odom);
+}
+
 bool open_mower_next::sim::SimNode::isInDockingStation()
 {
   // Try to get the current charging port position
@@ -119,7 +167,8 @@ bool open_mower_next::sim::SimNode::isInDockingStation()
   if (!inDockingStation && distance < 1.0) {
     RCLCPP_INFO_THROTTLE(
       get_logger(), *get_clock(), 5000,
-      "Distance from charging port to docking station: %f m, angle: %f rad", distance, angle);
+      "Charging port offset from docking station: x=%f m, y=%f m, distance=%f m, angle=%f rad",
+      translation.x(), translation.y(), distance, angle);
   }
 
   if (inDockingStation) {
@@ -135,16 +184,15 @@ void open_mower_next::sim::SimNode::chargerPresentSimulationCallback()
 {
   auto inDock = isInDockingStation();
 
-  charger_present_msg_.data = inDock;
-  charger_present_publisher_->publish(charger_present_msg_);
+  charger_present_ = inDock;
 
   if (inDock) {
-    charge_voltage_msg_.data = battery_state_max_voltage_;
+    charge_voltage_ = static_cast<float>(battery_state_max_voltage_);
   } else {
-    charge_voltage_msg_.data = 0.0;
+    charge_voltage_ = 0.0f;
   }
 
-  charge_voltage_publisher_->publish(charge_voltage_msg_);
+  publishPowerStatus(get_clock()->now());
 }
 
 // This callback is called in a given interval to simulate the battery state
@@ -165,7 +213,7 @@ void open_mower_next::sim::SimNode::batteryStateSimulationCallback()
     last_battery_voltage_update_ = now;
   }
 
-  if (!charger_present_msg_.data) {
+  if (!charger_present_) {
     auto sinceLastVoltageUpdate = (now - last_battery_voltage_update_).seconds();
     if (sinceLastVoltageUpdate >= 1) {
       battery_state_msg_.voltage -= sinceLastVoltageUpdate * battery_state_voltage_drop_per_second_;
@@ -177,17 +225,22 @@ void open_mower_next::sim::SimNode::batteryStateSimulationCallback()
   }
 
   last_battery_voltage_update_ = now;
-  battery_state_msg_.percentage = (battery_state_msg_.voltage - battery_state_min_voltage_) /
-                                  (battery_state_max_voltage_ - battery_state_min_voltage_) * 100.0;
+  battery_state_msg_.percentage = std::clamp(
+    (battery_state_msg_.voltage - battery_state_min_voltage_) /
+      (battery_state_max_voltage_ - battery_state_min_voltage_),
+    0.0, 1.0);
 
-  if (charger_present_msg_.data) {
-    if (battery_state_msg_.percentage < 100.0) {
+  if (charger_present_) {
+    if (battery_state_msg_.percentage < 1.0) {
       battery_state_msg_.power_supply_status =
         sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_CHARGING;
     } else {
       battery_state_msg_.power_supply_status =
         sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_FULL;
     }
+  } else {
+    battery_state_msg_.power_supply_status =
+      sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
   }
 
   battery_state_msg_.power_supply_health =
@@ -201,4 +254,31 @@ void open_mower_next::sim::SimNode::batteryStateSimulationCallback()
 
   battery_state_msg_.header.stamp = now;
   battery_state_publisher_->publish(battery_state_msg_);
+  publishPowerStatus(now);
+}
+
+void open_mower_next::sim::SimNode::publishPowerStatus(const rclcpp::Time & stamp)
+{
+  const float battery_percentage = static_cast<float>(battery_state_msg_.percentage * 100.0);
+  const bool charging_allowed = charger_present_ && battery_percentage < 100.0f;
+
+  power_status_msg_.stamp = stamp;
+  power_status_msg_.battery_voltage = static_cast<float>(battery_state_msg_.voltage);
+  power_status_msg_.battery_percentage = battery_percentage;
+  power_status_msg_.battery_present = battery_state_msg_.present;
+  power_status_msg_.charge_voltage = charge_voltage_;
+  power_status_msg_.charge_current = charging_allowed ? 0.5f : 0.0f;
+  power_status_msg_.charger_present = charger_present_;
+  power_status_msg_.charge_path_enabled = !charger_present_ || charging_allowed;
+  power_status_msg_.charging_allowed = charging_allowed;
+  power_status_msg_.charging_state = charger_present_
+                                      ? (charging_allowed
+                                           ? omros2_firmware_msgs::msg::PowerStatus::CHARGING_STATE_CHARGING
+                                           : omros2_firmware_msgs::msg::PowerStatus::CHARGING_STATE_NOT_CHARGING)
+                                      : omros2_firmware_msgs::msg::PowerStatus::CHARGING_STATE_REGEN_PATH;
+  power_status_msg_.inhibit_reason = charger_present_ && !charging_allowed
+                                      ? omros2_firmware_msgs::msg::PowerStatus::INHIBIT_BATTERY_FULL
+                                      : omros2_firmware_msgs::msg::PowerStatus::INHIBIT_NONE;
+  power_status_msg_.retry_remaining_ms = 0;
+  power_status_publisher_->publish(power_status_msg_);
 }

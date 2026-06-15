@@ -1,0 +1,28 @@
+#VRML_SIM R2025a utf8
+
+PROTO GardenBuilding [
+  field SFVec3f    translation 0 0 1
+  field SFRotation rotation    0 0 1 0
+  field SFString   name        "building"
+  field SFVec3f    size        4 3 2
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    children [
+      Shape {
+        appearance PBRAppearance {
+          baseColor 0.62 0.58 0.52
+          roughness 0.9
+          metalness 0
+        }
+        geometry DEF BUILDING_BOX Box {
+          size IS size
+        }
+      }
+    ]
+    boundingObject USE BUILDING_BOX
+  }
+}

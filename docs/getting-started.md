@@ -48,6 +48,7 @@ Project is tested on YardForce Classic 500B model. It should work on other model
 
 - [Setup as for OpenMower](https://openmower.de/docs/robot-assembly/prepare-the-parts/)
   - [OpenMower v0.13.x mainboard](https://openmower.de/docs/robot-assembly/prepare-the-parts/prepare-mainboard/) with [omros2-firmware](https://github.com/jkaflik/omros2-firmware) flashed. Learn more about the custom firmware in [omros2-firmware](architecture/omros2-firmware).
+- For physical robot testing, see the [hardware target](hardware-target.md) guide. The examples use `omdev.local` as the conventional robot hostname.
 
 ### Software
 

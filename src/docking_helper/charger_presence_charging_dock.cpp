@@ -27,8 +27,9 @@ void ChargerPresenceChargingDock::configure(const rclcpp_lifecycle::LifecycleNod
   staging_x_offset_ = node_->get_parameter(name + ".staging_x_offset").as_double();
   staging_yaw_offset_ = node_->get_parameter(name + ".staging_yaw_offset").as_double();
 
-  is_charging_sub_ = node_->create_subscription<std_msgs::msg::Bool>(
-      "/power/charger_present", 10, [this](const std_msgs::msg::Bool::SharedPtr msg) { is_charging_ = msg->data; });
+  power_status_sub_ = node_->create_subscription<omros2_firmware_msgs::msg::PowerStatus>(
+      "/power/status", 10,
+      [this](const omros2_firmware_msgs::msg::PowerStatus::SharedPtr msg) { is_charging_ = msg->charger_present; });
 
   dock_pose_pub_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>("dock_pose", 1);
   staging_pose_pub_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>("staging_pose", 1);
@@ -41,7 +42,7 @@ void ChargerPresenceChargingDock::configure(const rclcpp_lifecycle::LifecycleNod
 void ChargerPresenceChargingDock::cleanup()
 {
   // Clean up subscriptions
-  is_charging_sub_.reset();
+  power_status_sub_.reset();
 }
 
 void ChargerPresenceChargingDock::activate()
@@ -85,6 +86,7 @@ geometry_msgs::msg::PoseStamped ChargerPresenceChargingDock::getStagingPose(cons
 
 bool ChargerPresenceChargingDock::getRefinedPose(geometry_msgs::msg::PoseStamped& pose, std::string id)
 {
+  (void)id;
   // just publish to a topic
   dock_pose_pub_->publish(pose);
   return true;

@@ -16,6 +16,7 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_action</depend>
+  <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>geometry_msgs</depend>
@@ -28,8 +29,10 @@
   <depend>ament_index_cpp</depend>
   <depend>visualization_msgs</depend>
   <depend>geographiclib</depend>
+  <depend>geographic_msgs</depend>
   <depend>opennav_docking</depend>
   <depend>sensor_msgs</depend>
+  <depend>omros2_firmware_msgs</depend>
   <depend>fields2cover</depend>
 
   <build_depend>nlohmann_json_schema_validator_vendor</build_depend>
@@ -60,11 +63,14 @@
   <exec_depend>unique_identifier_msgs</exec_depend>
   <exec_depend>micro_ros_agent</exec_depend>
 
-  <exec_depend>ublox_gps</exec_depend>
+  <exec_depend>ublox_f9p</exec_depend>
+  <exec_depend>gps_msgs</exec_depend>
   <exec_depend>ntrip_client</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
 
   <exec_depend>navigation2</exec_depend>
-  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>fusioncore_ros</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
 
   <exec_depend>foxglove_msgs</exec_depend>
   <exec_depend>foxglove_bridge</exec_depend>
@@ -75,8 +81,6 @@
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>action_msgs</test_depend>
-  <test_depend>lifecycle_msgs</test_depend>
-  <test_depend>rclpy</test_depend>
   <test_depend>rosgraph_msgs</test_depend>
 
   <build_depend>rosidl_default_generators</build_depend>

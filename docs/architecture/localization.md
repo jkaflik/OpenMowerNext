@@ -1,26 +1,27 @@
 ---
-title: Robot localization
+title: FusionCore localization
 ---
 # {{ $frontmatter.title }}
 
 ## Overview
 
 Robot pose is based on an absolute position from GPS and relative readings from wheel odometry and IMU.
-Orientation is not known on startup and defaults to 0. 
+Orientation is not known on startup and defaults to 0.
 
-As soon as robot starts moving, orientation is assumed based on robot motion and sensors reading.
-It might take a while to get an accurate orientation. Best to start moving in a straight line and do a few circles.
+FusionCore validates heading from GNSS track motion and, during startup, can also bootstrap heading from a controlled rotation around the GNSS lever arm. Until heading is validated, the GNSS lever-arm correction remains inactive.
 
-Currently, there is no fallback scenario if had its position changed externally. For example, if you move the robot manually, it will not be able to recover position itself. It will require same procedure as on startup. 
+If the robot is moved manually while powered, localization should be reset or restarted before autonomous motion. It will need the same heading validation procedure as on startup.
 
 Later on, when undocking behavior is implemented, it will be possible to recover orientation knowing base station position.
 
 ## Sensors
 
-[robot_localization documentation](http://docs.ros.org/en/melodic/api/robot_localization/html/integrating_gps.html) nicely describes
-how to get wheel odometry, GPS and IMU sensors data fusion to get an accurate localization.
+OpenMowerNext uses [FusionCore](https://github.com/manankharwar/fusioncore) for wheel odometry,
+GPS and IMU sensor fusion. FusionCore publishes `/fusion/odom` and the `odom -> base_link` TF.
+The map datum from `OM_DATUM_LAT` and `OM_DATUM_LONG` is used as the fixed FusionCore reference
+origin so the fused odometry aligns with GeoJSON maps.
 
-![Senor data flow](http://docs.ros.org/en/melodic/api/robot_localization/html/_images/navsat_transform_workflow.png)
+On hardware, the u-blox F9P driver publishes `gps_msgs/GPSFix` on `/gps/fix_extended` and the hardware launch remaps that into FusionCore. This preserves RTK_FLOAT versus RTK_FIX status, satellite count, and receiver accuracy fields that are not available in `sensor_msgs/NavSatFix`. Simulation still uses `/gps/fix` as `NavSatFix`.
 
 ### Wheel odometry
 
@@ -30,11 +31,11 @@ Default motor controller VESC reports wheel odometry.
 
 Accelerometer and gyroscope is required. Magnetometer is not fused.
 
-### GPU
+### GPS
 
 It's expected GPS is RTK capable. Otherwise, localization will be inaccurate.
 More on this in [GPS](../gps.md) section.
 
 ## Configuration
 
-<<< ../../config/robot_localization.yaml{yaml}
+<<< ../../config/fusioncore.yaml{yaml}

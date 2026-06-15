@@ -7,7 +7,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/polygon_stamped.hpp>
-#include <std_msgs/msg/bool.hpp>
+#include <omros2_firmware_msgs/msg/power_status.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
@@ -57,7 +57,7 @@ private:
   rclcpp::Client<open_mower_next::srv::SaveDockingStation>::SharedPtr save_docking_station_client_;
   rclcpp::Client<open_mower_next::srv::SaveArea>::SharedPtr save_area_client_;
 
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr charging_status_sub_;
+  rclcpp::Subscription<omros2_firmware_msgs::msg::PowerStatus>::SharedPtr charging_status_sub_;
 
   rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr boundary_polygon_pub_;
 
@@ -95,7 +95,7 @@ private:
   void handleFinishAreaRecording(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
                                  std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
-  void chargingStatusCallback(const std_msgs::msg::Bool::SharedPtr msg);
+  void chargingStatusCallback(const omros2_firmware_msgs::msg::PowerStatus::SharedPtr msg);
 
   bool validateAreaBoundary();
 

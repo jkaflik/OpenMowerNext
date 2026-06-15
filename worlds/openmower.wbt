@@ -43,9 +43,10 @@ Solid {
 }
 OpenMower {
   translation 0 0 0.0925
-  rotation 0 0 1 2.0944
+  rotation 0 0 1 0
   name "openmower"
   controller "<extern>"
+  supervisor TRUE
 }
 DockingStation {
   translation 1.5 1.5 0

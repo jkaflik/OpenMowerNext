@@ -10,7 +10,7 @@ repositories:
   ublox_f9p:
     type: git
     url: https://github.com/jkaflik/ublox_f9p
-    version: main
+    version: fix/parser-rtk-semantics
   ntrip_client:
     type: git
     url: https://github.com/LORD-MicroStrain/ntrip_client
@@ -19,3 +19,15 @@ repositories:
     type: git
     url: https://github.com/Fields2Cover/Fields2Cover.git
     version: 0ce7fcce82f3f79f773699448769bcd679c739bc
+  fusioncore:
+    type: git
+    url: https://github.com/jkaflik/fusioncore.git
+    version: openmower/gnss-rotation-heading-bootstrap
+  webots_ros2:
+    type: git
+    url: https://github.com/jkaflik/webots_ros2.git
+    version: openmower/fix-gps-navsat-status
+  omros2_firmware:
+    type: git
+    url: https://github.com/jkaflik/omros2-firmware.git
+    version: ba454a21bde8562baa7fe328613e7e3644b9c284

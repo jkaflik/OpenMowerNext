@@ -1,6 +1,8 @@
 import os
+import tempfile
 
 import xacro
+import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
@@ -9,8 +11,9 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     RegisterEventHandler,
+    SetEnvironmentVariable,
 )
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -20,6 +23,26 @@ from launch_ros.actions import Node
 from webots_ros2_driver.wait_for_controller_connection import WaitForControllerConnection
 from webots_ros2_driver.webots_controller import WebotsController
 from webots_ros2_driver.webots_launcher import Ros2SupervisorLauncher, WebotsLauncher
+
+
+def controller_parameters_file(share_directory):
+    controller_path = os.path.join(share_directory, "config", "controllers.yaml")
+    hardware_path = os.path.join(share_directory, "config", "hardware", "yardforce500.yaml")
+    with open(controller_path, "r", encoding="utf-8") as stream:
+        controllers = yaml.safe_load(stream)
+    with open(hardware_path, "r", encoding="utf-8") as stream:
+        hardware = yaml.safe_load(stream)
+    wheel_offset_y = float(hardware["wheel"]["offset"][1])
+    controllers.setdefault("diff_drive_base_controller", {}).setdefault("ros__parameters", {})[
+        "wheel_separation"
+    ] = 2.0 * abs(wheel_offset_y)
+
+    params_file = tempfile.NamedTemporaryFile(
+        mode="w", prefix="openmower_controllers_", suffix=".yaml", delete=False
+    )
+    with params_file:
+        yaml.safe_dump(controllers, params_file, sort_keys=False)
+    return params_file.name
 
 
 def shutdown_on_driver_failure(event, context):
@@ -33,6 +56,13 @@ def launch_setup(context, *args, **kwargs):
 
     package_name = "open_mower_next"
     share_directory = get_package_share_directory(package_name)
+    webots_plugin_path = os.path.join(share_directory, "resource")
+    existing_pythonpath = os.environ.get("PYTHONPATH", "")
+    webots_pythonpath = (
+        webots_plugin_path
+        if not existing_pythonpath
+        else webots_plugin_path + os.pathsep + existing_pythonpath
+    )
 
     world = LaunchConfiguration("world").perform(context)
     mode = LaunchConfiguration("mode").perform(context)
@@ -47,6 +77,8 @@ def launch_setup(context, *args, **kwargs):
     enable_foxglove = LaunchConfiguration("enable_foxglove")
     foxglove_address = LaunchConfiguration("foxglove_address")
     foxglove_port = LaunchConfiguration("foxglove_port")
+    enable_joy_node = LaunchConfiguration("enable_joy_node")
+    enable_navigation_readiness = LaunchConfiguration("enable_navigation_readiness")
 
     xacro_file = os.path.join(share_directory, "description", "robot.urdf.xacro")
     robot_description_config = xacro.process_file(
@@ -72,6 +104,14 @@ def launch_setup(context, *args, **kwargs):
         remappings=[("/cmd_vel_out", "/diff_drive_base_controller/cmd_vel")],
     )
 
+    joystick = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "joystick.launch.py")),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "enable_joy_node": enable_joy_node,
+        }.items(),
+    )
+
     webots = WebotsLauncher(
         world=os.path.join(share_directory, "worlds", world),
         mode=mode,
@@ -79,9 +119,9 @@ def launch_setup(context, *args, **kwargs):
         stream=webots_stream,
         port=webots_port,
     )
-    webots_supervisor = Ros2SupervisorLauncher(respawn=False)
+    webots_supervisor = Ros2SupervisorLauncher(respawn=False, port=webots_port)
 
-    controller_params_file = os.path.join(share_directory, "config", "controllers.yaml")
+    controller_params_file = controller_parameters_file(share_directory)
     webots_robot_description = os.path.join(share_directory, "resource", "openmower_webots.urdf")
     webots_driver = WebotsController(
         robot_name="openmower",
@@ -94,6 +134,7 @@ def launch_setup(context, *args, **kwargs):
             controller_params_file,
         ],
         respawn=False,
+        port=webots_port,
     )
 
     controller_manager_timeout = ["--controller-manager-timeout", "50"]
@@ -118,14 +159,12 @@ def launch_setup(context, *args, **kwargs):
         arguments=["mower_controller"] + controller_manager_timeout,
         parameters=[{"use_sim_time": use_sim_time}],
     )
-    controller_spawners = [load_joint_state_controller, load_diff_controller, load_mower_controller]
-
     wait_for_webots_driver = WaitForControllerConnection(
         target_driver=webots_driver,
-        nodes_to_start=controller_spawners,
+        nodes_to_start=[load_joint_state_controller],
     )
 
-    # Simulation helper node publishes the hardware-facing power topics.
+    # Simulation helper node publishes the hardware-facing power status topics.
     sim_node = Node(
         package="open_mower_next",
         executable="sim_node",
@@ -139,6 +178,7 @@ def launch_setup(context, *args, **kwargs):
                 "docking_station_contact_y": 1.5,
                 "docking_station_contact_z": 0.06,
                 "docking_station_contact_yaw": 0.0,
+                "docking_detection_tolerance_x": 0.30,
             }
         ],
     )
@@ -147,18 +187,45 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "localization.launch.py")),
         launch_arguments={
             "use_sim_time": use_sim_time,
-            "autostart": "true",
+            "gnss_base_noise_xy": "0.05",
+            "gnss_track_heading_min_speed": "0.10",
+            "gnss_track_heading_min_dist": "1.0",
+            "gnss_heading_observable_distance": "1.0",
+            "gnss_use_gps_fix": "false",
+            "gnss_fix_topic": "/gps/fix",
+            "init_stationary_window": "0.0",
+            "init_wait_for_all_sensors": "true",
         }.items(),
     )
 
-    nav2 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "nav2.launch.py")),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "autostart": "true",
-            "params_file": os.path.join(share_directory, "config", "nav2_params.yaml"),
-        }.items(),
+    def make_nav2(condition=None):
+        return IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "nav2.launch.py")),
+            launch_arguments={
+                "use_sim_time": use_sim_time,
+                "autostart": "true",
+                "params_file": os.path.join(share_directory, "config", "nav2_params.yaml"),
+            }.items(),
+            condition=condition,
+        )
+
+    nav2 = make_nav2()
+    nav2_without_readiness = make_nav2(UnlessCondition(enable_navigation_readiness))
+
+    navigation_readiness = Node(
+        package="open_mower_next",
+        executable="navigation_readiness_node",
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time, "timeout_seconds": 120.0}],
+        condition=IfCondition(enable_navigation_readiness),
     )
+
+    def start_nav2_or_shutdown(event, context):
+        if context.is_shutdown:
+            return []
+        if event.returncode == 0:
+            return [nav2]
+        return [EmitEvent(event=Shutdown(reason="Navigation prerequisites timed out"))]
 
     foxglove_bridge = IncludeLaunchDescription(
         XMLLaunchDescriptionSource(
@@ -174,15 +241,37 @@ def launch_setup(context, *args, **kwargs):
     )
 
     return [
+        SetEnvironmentVariable("PYTHONPATH", webots_pythonpath),
         webots,
         webots_supervisor,
         node_robot_state_publisher,
+        joystick,
         twist_mux,
         webots_driver,
         wait_for_webots_driver,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_controller,
+                on_exit=[load_diff_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_diff_controller,
+                on_exit=[load_mower_controller],
+            )
+        ),
         sim_node,
         localization,
-        nav2,
+        navigation_readiness,
+        nav2_without_readiness,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=navigation_readiness,
+                on_exit=start_nav2_or_shutdown,
+            ),
+            condition=IfCondition(enable_navigation_readiness),
+        ),
         foxglove_bridge,
         RegisterEventHandler(
             event_handler=OnProcessExit(
@@ -202,7 +291,7 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription(
         [
-            DeclareLaunchArgument("world", default_value="openmower.wbt"),
+            DeclareLaunchArgument("world", default_value="realistic_garden.wbt"),
             DeclareLaunchArgument("mode", default_value="realtime"),
             DeclareLaunchArgument("gui", default_value="true"),
             DeclareLaunchArgument("webots_stream", default_value="true"),
@@ -211,6 +300,8 @@ def generate_launch_description():
             DeclareLaunchArgument("enable_foxglove", default_value="false"),
             DeclareLaunchArgument("foxglove_address", default_value="0.0.0.0"),
             DeclareLaunchArgument("foxglove_port", default_value="8765"),
+            DeclareLaunchArgument("enable_joy_node", default_value="false"),
+            DeclareLaunchArgument("enable_navigation_readiness", default_value="true"),
             OpaqueFunction(function=launch_setup),
         ]
     )

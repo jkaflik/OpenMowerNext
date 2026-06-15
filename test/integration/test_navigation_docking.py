@@ -13,6 +13,7 @@ from lifecycle_msgs.msg import State
 from lifecycle_msgs.srv import GetState
 from nav2_msgs.action import NavigateToPose
 from nav_msgs.msg import OccupancyGrid, Odometry
+from omros2_firmware_msgs.msg import PowerStatus
 from open_mower_next.action import DockRobotNearest
 from open_mower_next.msg import Map
 from rclpy.action import ActionClient
@@ -22,7 +23,7 @@ from rclpy.parameter import Parameter
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from rosgraph_msgs.msg import Clock
-from std_msgs.msg import Bool, Float32
+from sensor_msgs.msg import NavSatFix
 
 
 NAVIGATION_GOAL_X = -0.2
@@ -53,6 +54,25 @@ LOG_FAILURE_PATTERNS = (
     "Traceback (most recent call last)",
 )
 
+ROSBAG_TOPICS = (
+    "/clock",
+    "/tf",
+    "/tf_static",
+    "/fusion/odom",
+    "/diff_drive_base_controller/odom",
+    "/gps/fix",
+    "/gps/fix/speed_vector",
+    "/gps/odom",
+    "/cmd_vel_raw",
+    "/cmd_vel_nav",
+    "/diff_drive_base_controller/cmd_vel",
+    "/power/status",
+    "/dock_pose",
+    "/staging_pose",
+    "/docking_trajectory",
+    "/joint_states",
+)
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -62,6 +82,7 @@ def prepare_env() -> dict[str, str]:
     root = repo_root()
     env = os.environ.copy()
     env["ROS_DOMAIN_ID"] = str(100 + (os.getpid() % 100))
+    env["WEBOTS_PORT"] = str(13000 + (os.getpid() % 1000))
     env["WEBOTS_OFFSCREEN"] = "1"
     env["OM_DATUM_LAT"] = "-22.9"
     env["OM_DATUM_LONG"] = "-43.2"
@@ -89,6 +110,8 @@ def start_simulation(log_path: Path, env: dict[str, str]):
             "gui:=false",
             "mode:=realtime",
             "enable_foxglove:=false",
+            "world:=simple_lawn.wbt",
+            f"webots_port:={env['WEBOTS_PORT']}",
         ],
         stdout=log_file,
         stderr=subprocess.STDOUT,
@@ -97,6 +120,26 @@ def start_simulation(log_path: Path, env: dict[str, str]):
         text=True,
     )
     return process, log_file
+
+
+def start_rosbag(tmp_path: Path, env: dict[str, str]):
+    bag_root = env.get("OPEN_MOWER_NEXT_TEST_ROSBAG_DIR")
+    if not bag_root:
+        return None, None, None
+
+    output_dir = Path(bag_root) / f"navigation_docking_{os.getpid()}"
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    log_path = tmp_path / "rosbag.log"
+    log_file = log_path.open("w", encoding="utf-8")
+    process = subprocess.Popen(
+        ["ros2", "bag", "record", "-o", str(output_dir), *ROSBAG_TOPICS],
+        stdout=log_file,
+        stderr=subprocess.STDOUT,
+        env=env,
+        start_new_session=True,
+        text=True,
+    )
+    return process, log_file, output_dir
 
 
 def stop_simulation(process: subprocess.Popen) -> None:
@@ -184,8 +227,8 @@ class NavigationDockingTestNode(Node):
         self.map_grid_received = False
         self.mowing_map = None
         self.diff_drive_odom_received = False
+        self.gps_fix_received = False
         self.gps_odom_received = False
-        self.filtered_odom_after_gps = False
         self.filtered_odom = None
         self.closest_navigation_goal_distance = math.inf
         self.bounded_localization_since = None
@@ -208,10 +251,10 @@ class NavigationDockingTestNode(Node):
         self.create_subscription(OccupancyGrid, "/map_grid", self._map_grid_callback, map_qos)
         self.create_subscription(Map, "/mowing_map", self._mowing_map_callback, map_qos)
         self.create_subscription(Odometry, "/diff_drive_base_controller/odom", self._diff_odom_callback, 10)
-        self.create_subscription(Odometry, "/odometry/gps", self._gps_odom_callback, 10)
-        self.create_subscription(Odometry, "/odometry/filtered/map", self._odom_callback, 10)
-        self.create_subscription(Bool, "/power/charger_present", self._charger_callback, 10)
-        self.create_subscription(Float32, "/power/charge_voltage", self._charge_voltage_callback, 10)
+        self.create_subscription(NavSatFix, "/gps/fix", self._gps_fix_callback, 10)
+        self.create_subscription(Odometry, "/gps/odom", self._gps_odom_callback, 10)
+        self.create_subscription(Odometry, "/fusion/odom", self._odom_callback, 10)
+        self.create_subscription(PowerStatus, "/power/status", self._power_status_callback, 10)
 
     def _clock_callback(self, _msg: Clock) -> None:
         self.clock_received = True
@@ -225,25 +268,22 @@ class NavigationDockingTestNode(Node):
     def _diff_odom_callback(self, _msg: Odometry) -> None:
         self.diff_drive_odom_received = True
 
-    def _gps_odom_callback(self, _msg: Odometry) -> None:
-        if not self.gps_odom_received:
-            self.filtered_odom_after_gps = False
-            self.bounded_localization_since = None
-        self.gps_odom_received = True
+    def _gps_fix_callback(self, _msg: NavSatFix) -> None:
+        self.gps_fix_received = True
+
+    def _gps_odom_callback(self, msg: Odometry) -> None:
+        if is_finite_odom(msg):
+            self.gps_odom_received = True
 
     def _odom_callback(self, msg: Odometry) -> None:
         self.filtered_odom = msg
-        if self.gps_odom_received:
-            self.filtered_odom_after_gps = True
         position = msg.pose.pose.position
         distance = math.hypot(position.x - NAVIGATION_GOAL_X, position.y - NAVIGATION_GOAL_Y)
         self.closest_navigation_goal_distance = min(self.closest_navigation_goal_distance, distance)
 
-    def _charger_callback(self, msg: Bool) -> None:
-        self.charger_present = msg.data
-
-    def _charge_voltage_callback(self, msg: Float32) -> None:
-        self.charge_voltage = msg.data
+    def _power_status_callback(self, msg: PowerStatus) -> None:
+        self.charger_present = msg.charger_present
+        self.charge_voltage = msg.charge_voltage
 
     def has_ready_state(self) -> bool:
         if not self.clock_received or not self.map_grid_received:
@@ -252,11 +292,11 @@ class NavigationDockingTestNode(Node):
             return False
         if not self.diff_drive_odom_received:
             return False
+        if not self.gps_fix_received:
+            return False
         if not self.gps_odom_received:
             return False
         if self.filtered_odom is None or not is_finite_odom(self.filtered_odom):
-            return False
-        if not self.filtered_odom_after_gps:
             return False
         if not self.has_bounded_filtered_pose():
             self.bounded_localization_since = None
@@ -324,8 +364,8 @@ class NavigationDockingTestNode(Node):
             f"dock_count={dock_count}, "
             f"map_dock={map_dock}, "
             f"diff_drive_odom={self.diff_drive_odom_received}, "
+            f"gps_fix={self.gps_fix_received}, "
             f"gps_odom={self.gps_odom_received}, "
-            f"filtered_odom_after_gps={self.filtered_odom_after_gps}, "
             f"filtered_odom={odom_ready}, "
             f"filtered_pose={odom_pose}, "
             f"closest_goal_distance={self.closest_navigation_goal_distance:.3f}, "
@@ -402,14 +442,19 @@ def wait_for_lifecycle_nodes_active(
                 all_active = False
                 continue
 
-            response = wait_for_future(
-                node,
-                client.call_async(GetState.Request()),
-                2.0,
-                f"{name} lifecycle state",
-                process,
-                log_path,
-            )
+            future = client.call_async(GetState.Request())
+            query_deadline = time.monotonic() + 2.0
+            while time.monotonic() < query_deadline:
+                check_process(process, log_path)
+                if future.done():
+                    break
+                rclpy.spin_once(node, timeout_sec=0.1)
+            if not future.done():
+                states[name] = "state_query_timeout"
+                all_active = False
+                continue
+
+            response = future.result()
             states[name] = response.current_state.label or str(response.current_state.id)
             if response.current_state.id != State.PRIMARY_STATE_ACTIVE:
                 all_active = False
@@ -479,52 +524,9 @@ def send_navigation_goal(node: NavigationDockingTestNode, process, log_path: Pat
         f"NavigateToPose goal was rejected\n{node.describe_state()}\n{read_log_tail(log_path)}"
     )
 
-    result_future = goal_handle.get_result_async()
-    result_response = None
-    deadline = time.monotonic() + 120.0
-    while time.monotonic() < deadline:
-        check_process(process, log_path)
-        if node.distance_to_navigation_goal() <= NAVIGATION_GOAL_TOLERANCE:
-            break
-        if result_future.done():
-            result_response = result_future.result()
-            break
-        rclpy.spin_once(node, timeout_sec=0.1)
-
-    if result_response is None and node.distance_to_navigation_goal() > NAVIGATION_GOAL_TOLERANCE:
-        pytest.fail(
-            "Timed out waiting for NavigateToPose to reach the waypoint\n"
-            f"{node.describe_state()}\n{read_log_tail(log_path)}"
-        )
-
-    if result_response is None and not result_future.done():
-        cancel_future = goal_handle.cancel_goal_async()
-        cancel_response = wait_for_future(
-            node, cancel_future, 15.0, "NavigateToPose cancellation", process, log_path
-        )
-        if cancel_response.goals_canceling:
-            cancel_result = wait_for_future(
-                node, result_future, 15.0, "NavigateToPose canceled result", process, log_path
-            )
-            assert cancel_result.status in (
-                GoalStatus.STATUS_CANCELED,
-                GoalStatus.STATUS_SUCCEEDED,
-            ), (
-                f"NavigateToPose reached the waypoint but finished with status={cancel_result.status}\n"
-                f"{node.describe_state()}\n{read_log_tail(log_path)}"
-            )
-            spin_for(node, 1.0, process, log_path)
-            return
-        if result_future.done():
-            result_response = result_future.result()
-        else:
-            pytest.fail(
-                "NavigateToPose reached the waypoint but cancellation was not accepted\n"
-                f"{node.describe_state()}\n{read_log_tail(log_path)}"
-            )
-
-    if result_response is None:
-        result_response = result_future.result()
+    result_response = wait_for_future(
+        node, goal_handle.get_result_async(), 120.0, "NavigateToPose result", process, log_path
+    )
 
     assert result_response.status == GoalStatus.STATUS_SUCCEEDED, (
         f"NavigateToPose failed with status={result_response.status}, "
@@ -569,9 +571,12 @@ def send_docking_goal(node: NavigationDockingTestNode, process, log_path: Path):
 def test_navigate_to_point_then_dock(tmp_path):
     log_path = tmp_path / "navigation_docking.log"
     env = prepare_env()
+    previous_ros_domain_id = os.environ.get("ROS_DOMAIN_ID")
     os.environ["ROS_DOMAIN_ID"] = env["ROS_DOMAIN_ID"]
 
     process, log_file = start_simulation(log_path, env)
+    rosbag_process = None
+    rosbag_log_file = None
     rclpy.init()
     node = NavigationDockingTestNode()
 
@@ -584,11 +589,11 @@ def test_navigate_to_point_then_dock(tmp_path):
             process,
             log_path,
         )
+        wait_for_lifecycle_nodes_active(node, NAV2_LIFECYCLE_NODES, 60.0, process, log_path)
         wait_for_action_server(node, node.navigate_client, "/navigate_to_pose", 60.0, process, log_path)
         wait_for_action_server(node, node.dock_client, "/dock_robot_nearest", 60.0, process, log_path)
-        wait_for_lifecycle_nodes_active(node, NAV2_LIFECYCLE_NODES, 60.0, process, log_path)
-
         send_navigation_goal(node, process, log_path)
+        rosbag_process, rosbag_log_file, _rosbag_output_dir = start_rosbag(tmp_path, env)
         send_docking_goal(node, process, log_path)
         spin_until(
             node,
@@ -603,7 +608,15 @@ def test_navigate_to_point_then_dock(tmp_path):
     finally:
         node.destroy_node()
         rclpy.shutdown()
+        if rosbag_process is not None:
+            stop_simulation(rosbag_process)
+        if rosbag_log_file is not None:
+            rosbag_log_file.close()
         stop_simulation(process)
         log_file.close()
+        if previous_ros_domain_id is None:
+            os.environ.pop("ROS_DOMAIN_ID", None)
+        else:
+            os.environ["ROS_DOMAIN_ID"] = previous_ros_domain_id
 
     assert_no_launch_failures(log_path)

@@ -1,0 +1,28 @@
+#VRML_SIM R2025a utf8
+
+PROTO Curb [
+  field SFVec3f    translation 0 0 0.035
+  field SFRotation rotation    0 0 1 0
+  field SFString   name        "curb"
+  field SFVec3f    size        1 0.12 0.07
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    children [
+      Shape {
+        appearance PBRAppearance {
+          baseColor 0.58 0.58 0.54
+          roughness 0.75
+          metalness 0
+        }
+        geometry DEF CURB_BOX Box {
+          size IS size
+        }
+      }
+    ]
+    boundingObject USE CURB_BOX
+  }
+}

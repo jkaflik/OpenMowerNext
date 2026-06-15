@@ -17,9 +17,11 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(geographic_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(omros2_firmware_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(robot_localization REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -73,8 +75,21 @@ include(cmake/docking_helper.cmake)
 include(cmake/map_recorder.cmake)
 include(cmake/coverage_server.cmake)
 
+install(
+        PROGRAMS scripts/calibrate_robot.py
+        DESTINATION lib/${PROJECT_NAME}
+        RENAME calibrate_robot
+)
+
+install(
+        PROGRAMS scripts/webots_world_to_geojson.py
+        DESTINATION lib/${PROJECT_NAME}
+        RENAME webots_world_to_geojson
+)
+
 if (BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_pytest REQUIRED)
     # the following line skips the linter which checks for copyrights
     # comment the line when a copyright and license is added to all source files
     set(ament_cmake_copyright_FOUND TRUE)
@@ -90,10 +105,16 @@ if (BUILD_TESTING)
     set(ament_cmake_xmllint_FOUND TRUE)
     ament_lint_auto_find_test_dependencies()
 
+    ament_add_pytest_test(calibrate_robot test/test_calibrate_robot.py TIMEOUT 30)
+    ament_add_pytest_test(webots_world_to_geojson test/test_webots_world_to_geojson.py TIMEOUT 30)
+
     if (OPEN_MOWER_NEXT_ENABLE_INTEGRATION_TESTS)
-        find_package(ament_cmake_pytest REQUIRED)
         ament_add_pytest_test(webots_smoke test/integration/test_webots_smoke.py TIMEOUT 180)
         set_tests_properties(webots_smoke PROPERTIES LABELS integration RESOURCE_LOCK webots)
+        ament_add_pytest_test(gps_rotation_heading test/integration/test_gps_rotation_heading.py TIMEOUT 360)
+        set_tests_properties(gps_rotation_heading PROPERTIES LABELS integration RESOURCE_LOCK webots)
+        ament_add_pytest_test(gps_degraded test/integration/test_gps_degraded.py TIMEOUT 480)
+        set_tests_properties(gps_degraded PROPERTIES LABELS integration RESOURCE_LOCK webots)
         ament_add_pytest_test(navigation_docking test/integration/test_navigation_docking.py TIMEOUT 420)
         set_tests_properties(navigation_docking PROPERTIES LABELS integration RESOURCE_LOCK webots)
     endif ()
