@@ -3,10 +3,19 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import EmitEvent, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import (
+    DeclareLaunchArgument,
+    EmitEvent,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+)
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessStart, OnProcessExit
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
 from launch_ros.actions import Node
 
@@ -17,6 +26,11 @@ def generate_launch_description():
     package_name = 'open_mower_next'
 
     share_directory = get_package_share_directory(package_name)
+    enable_foxglove = LaunchConfiguration('enable_foxglove')
+    foxglove_address = LaunchConfiguration('foxglove_address')
+    foxglove_port = LaunchConfiguration('foxglove_port')
+    enable_navigation_readiness = LaunchConfiguration('enable_navigation_readiness')
+
     xacro_file = os.path.join(share_directory, 'description/robot.urdf.xacro')
     robot_description_config = xacro.process_file(xacro_file, mappings={
         'use_ros2_control': '1',
@@ -78,14 +92,37 @@ def generate_launch_description():
         executable='navigation_readiness_node',
         output='screen',
         parameters=[{'use_sim_time': False, 'timeout_seconds': 120.0}],
+        condition=IfCondition(enable_navigation_readiness),
     )
 
-    nav2 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([share_directory, '/launch/nav2.launch.py']),
+    def make_nav2(condition=None):
+        return IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([share_directory, '/launch/nav2.launch.py']),
+            launch_arguments={
+                'use_sim_time': 'false',
+                'autostart': 'true',
+            }.items(),
+            condition=condition,
+        )
+
+    nav2 = make_nav2()
+    nav2_without_readiness = make_nav2(UnlessCondition(enable_navigation_readiness))
+
+    foxglove_bridge = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('foxglove_bridge'),
+                'launch',
+                'foxglove_bridge_launch.xml',
+            )
+        ),
         launch_arguments={
+            'address': foxglove_address,
+            'port': foxglove_port,
+            'include_hidden': 'true',
             'use_sim_time': 'false',
-            'autostart': 'true',
         }.items(),
+        condition=IfCondition(enable_foxglove),
     )
 
     def start_nav2_or_shutdown(event, context):
@@ -97,6 +134,11 @@ def generate_launch_description():
 
     # Launch them all!
     return LaunchDescription([
+        DeclareLaunchArgument('enable_foxglove', default_value='true'),
+        DeclareLaunchArgument('foxglove_address', default_value='0.0.0.0'),
+        DeclareLaunchArgument('foxglove_port', default_value='8765'),
+        DeclareLaunchArgument('enable_navigation_readiness', default_value='true'),
+
         node_robot_state_publisher,
         twist_mux,
         controller_manager,
@@ -130,21 +172,26 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([share_directory, '/launch/localization.launch.py']),
             launch_arguments={
                 'use_sim_time': 'false',
-                'autostart': 'true',
+                'gnss_use_gps_fix': 'true',
+                'gnss_fix_topic': '/gps/fix_extended',
             }.items(),
         ),
 
         navigation_readiness,
+        nav2_without_readiness,
 
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=navigation_readiness,
                 on_exit=start_nav2_or_shutdown,
-            )
+            ),
+            condition=IfCondition(enable_navigation_readiness),
         ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 [share_directory, '/launch/micro_ros_agent.launch.py']),
         ),
+
+        foxglove_bridge,
     ])

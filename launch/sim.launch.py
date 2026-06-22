@@ -10,7 +10,7 @@ from launch.actions import (
     OpaqueFunction,
     RegisterEventHandler,
 )
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -47,6 +47,7 @@ def launch_setup(context, *args, **kwargs):
     enable_foxglove = LaunchConfiguration("enable_foxglove")
     foxglove_address = LaunchConfiguration("foxglove_address")
     foxglove_port = LaunchConfiguration("foxglove_port")
+    enable_navigation_readiness = LaunchConfiguration("enable_navigation_readiness")
 
     xacro_file = os.path.join(share_directory, "description", "robot.urdf.xacro")
     robot_description_config = xacro.process_file(
@@ -147,28 +148,37 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "localization.launch.py")),
         launch_arguments={
             "use_sim_time": use_sim_time,
-            "autostart": "true",
             "gnss_base_noise_xy": "0.05",
             "gnss_track_heading_min_speed": "0.10",
             "gnss_track_heading_min_dist": "1.0",
             "gnss_heading_observable_distance": "1.0",
+            "gnss_use_gps_fix": "false",
+            "gnss_fix_topic": "/gps/fix",
+            "init_stationary_window": "0.0",
+            "init_wait_for_all_sensors": "true",
         }.items(),
     )
 
-    nav2 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "nav2.launch.py")),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "autostart": "true",
-            "params_file": os.path.join(share_directory, "config", "nav2_params.yaml"),
-        }.items(),
-    )
+    def make_nav2(condition=None):
+        return IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "nav2.launch.py")),
+            launch_arguments={
+                "use_sim_time": use_sim_time,
+                "autostart": "true",
+                "params_file": os.path.join(share_directory, "config", "nav2_params.yaml"),
+            }.items(),
+            condition=condition,
+        )
+
+    nav2 = make_nav2()
+    nav2_without_readiness = make_nav2(UnlessCondition(enable_navigation_readiness))
 
     navigation_readiness = Node(
         package="open_mower_next",
         executable="navigation_readiness_node",
         output="screen",
         parameters=[{"use_sim_time": use_sim_time, "timeout_seconds": 120.0}],
+        condition=IfCondition(enable_navigation_readiness),
     )
 
     def start_nav2_or_shutdown(event, context):
@@ -213,11 +223,13 @@ def launch_setup(context, *args, **kwargs):
         sim_node,
         localization,
         navigation_readiness,
+        nav2_without_readiness,
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=navigation_readiness,
                 on_exit=start_nav2_or_shutdown,
-            )
+            ),
+            condition=IfCondition(enable_navigation_readiness),
         ),
         foxglove_bridge,
         RegisterEventHandler(
@@ -247,6 +259,7 @@ def generate_launch_description():
             DeclareLaunchArgument("enable_foxglove", default_value="false"),
             DeclareLaunchArgument("foxglove_address", default_value="0.0.0.0"),
             DeclareLaunchArgument("foxglove_port", default_value="8765"),
+            DeclareLaunchArgument("enable_navigation_readiness", default_value="true"),
             OpaqueFunction(function=launch_setup),
         ]
     )

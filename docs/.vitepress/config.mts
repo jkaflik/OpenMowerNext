@@ -56,6 +56,7 @@ export default withMermaid({
                 { text: 'CLion alternative', link: '/clion-env' },
               ],
             },
+            { text: 'Hardware target', link: '/hardware-target' },
             { text: 'Visualisation', link: '/visualisation' },
             { text: 'Simulator', link: '/simulator' },
             { text: 'ROS MCP', link: '/ros-mcp' },

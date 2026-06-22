@@ -17,4 +17,4 @@ The goal is to:
 
 - `OM_MAP_PATH` - path to the map file (see: [map server](architecture/map-server.md))
 - `OM_DATUM_LAT` - latitude of the datum point
-- `OM_DATUM_LON` - longitude of the datum point
+- `OM_DATUM_LONG` - longitude of the datum point
