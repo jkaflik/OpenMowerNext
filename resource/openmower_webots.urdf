@@ -6,10 +6,18 @@
         <enabled>true</enabled>
         <alwaysOn>true</alwaysOn>
         <updateRate>5</updateRate>
-        <topicName>/gps/fix</topicName>
+        <topicName>/sim/gps/fix_raw</topicName>
         <frameName>gnss_link</frameName>
       </ros>
     </device>
+
+    <plugin type="open_mower_next_webots_plugins.GnssDegradationPlugin">
+      <inputFixTopic>/sim/gps/fix_raw</inputFixTopic>
+      <outputFixTopic>/gps/fix</outputFixTopic>
+      <inputSpeedVectorTopic>/sim/gps/fix_raw/speed_vector</inputSpeedVectorTopic>
+      <outputSpeedVectorTopic>/gps/fix/speed_vector</outputSpeedVectorTopic>
+      <seed>7</seed>
+    </plugin>
 
     <plugin type="webots_ros2_driver::Ros2IMU">
       <enabled>true</enabled>

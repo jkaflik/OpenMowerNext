@@ -9,6 +9,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     RegisterEventHandler,
+    SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
@@ -33,6 +34,13 @@ def launch_setup(context, *args, **kwargs):
 
     package_name = "open_mower_next"
     share_directory = get_package_share_directory(package_name)
+    webots_plugin_path = os.path.join(share_directory, "resource")
+    existing_pythonpath = os.environ.get("PYTHONPATH", "")
+    webots_pythonpath = (
+        webots_plugin_path
+        if not existing_pythonpath
+        else webots_plugin_path + os.pathsep + existing_pythonpath
+    )
 
     world = LaunchConfiguration("world").perform(context)
     mode = LaunchConfiguration("mode").perform(context)
@@ -192,6 +200,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     return [
+        SetEnvironmentVariable("PYTHONPATH", webots_pythonpath),
         webots,
         webots_supervisor,
         node_robot_state_publisher,
@@ -238,7 +247,7 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription(
         [
-            DeclareLaunchArgument("world", default_value="openmower.wbt"),
+            DeclareLaunchArgument("world", default_value="realistic_garden.wbt"),
             DeclareLaunchArgument("mode", default_value="realtime"),
             DeclareLaunchArgument("gui", default_value="true"),
             DeclareLaunchArgument("webots_stream", default_value="true"),
