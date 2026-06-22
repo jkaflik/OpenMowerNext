@@ -46,3 +46,4 @@
 - If `webots_ros2_driver` auto-installs Webots, it usually lands in `~/.ros/webotsR2025a/webots`; export `WEBOTS_HOME` to that path or use `make sim`.
 - Project OpenCode config starts `ros-mcp` with `uvx`; restart OpenCode after config changes or after installing `uv`.
 - Rosbridge for MCP binds to `127.0.0.1:9090` by default; prefer SSH tunneling over binding it to the LAN.
+- Do not glob/grep against `/` like: `Glob "/opt/ros/jazzy/**/webots_ros2_driver/**/*.py" in / `. Use highest-level path possible and avoid scanning the whole filesystem; the above example run in `/opt/ros/jazzy` would be `Glob "**/webots_ros2_driver/**/*.py" in /opt/ros/jazzy`.

@@ -258,7 +258,9 @@ void open_mower_next::docking_helper::DockingHelperNode::executeDockingAction(
       [this, current_status,
        current_retries](typename rclcpp_action::ClientGoalHandle<nav2_msgs::action::DockRobot>::SharedPtr,
                         const std::shared_ptr<const nav2_msgs::action::DockRobot::Feedback> feedback) {
-        RCLCPP_INFO(get_logger(), "Docking state: %d, retries: %d", feedback->state, feedback->num_retries);
+        RCLCPP_INFO_THROTTLE(
+            get_logger(), *get_clock(), 1000, "Docking state: %d, retries: %d", feedback->state,
+            feedback->num_retries);
 
         *current_status = feedback->state;
         *current_retries = feedback->num_retries;

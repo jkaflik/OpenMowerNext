@@ -19,6 +19,20 @@ open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
   battery_state_publisher_ = this->create_publisher<sensor_msgs::msg::BatteryState>("/power", 10);
   charge_voltage_publisher_ =
     this->create_publisher<std_msgs::msg::Float32>("/power/charge_voltage", 10);
+  gps_odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("/gps/odom", 10);
+
+  gps_odom_frame_ = this->declare_parameter<std::string>("gps_odom_frame", "map");
+  gps_child_frame_ = this->declare_parameter<std::string>("gps_child_frame", "gnss_link");
+  gps_speed_stddev_ = this->declare_parameter<double>("gps_speed_stddev", 0.05);
+
+  gps_fix_subscription_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
+    "/gps/fix", 10, [this](const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
+      gpsFixCallback(msg);
+    });
+  gps_speed_vector_subscription_ = this->create_subscription<geometry_msgs::msg::Vector3>(
+    "/gps/fix/speed_vector", 10, [this](const geometry_msgs::msg::Vector3::SharedPtr msg) {
+      gpsSpeedVectorCallback(msg);
+    });
 
   auto freq_ = this->declare_parameter<int32_t>("charger_simulation_freq", 15);
 
@@ -83,6 +97,37 @@ open_mower_next::sim::SimNode::SimNode(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(get_logger(), "SimNode created with timer frequency: %d Hz", static_cast<int>(freq_));
 }
 
+void open_mower_next::sim::SimNode::gpsFixCallback(
+  const sensor_msgs::msg::NavSatFix::SharedPtr msg)
+{
+  has_gps_fix_ = true;
+  last_gps_fix_stamp_ = msg->header.stamp;
+}
+
+void open_mower_next::sim::SimNode::gpsSpeedVectorCallback(
+  const geometry_msgs::msg::Vector3::SharedPtr msg)
+{
+  nav_msgs::msg::Odometry odom;
+  if (has_gps_fix_) {
+    odom.header.stamp = last_gps_fix_stamp_;
+  } else {
+    odom.header.stamp = now();
+  }
+  odom.header.frame_id = gps_odom_frame_;
+  odom.child_frame_id = gps_child_frame_;
+  odom.twist.twist.linear.x = msg->x;
+  odom.twist.twist.linear.y = msg->y;
+  odom.twist.twist.linear.z = msg->z;
+
+  const double speed_var = gps_speed_stddev_ * gps_speed_stddev_;
+  odom.twist.covariance[0] = speed_var;
+  odom.twist.covariance[7] = speed_var;
+  odom.twist.covariance[14] = speed_var;
+  odom.twist.covariance[35] = -1.0;
+
+  gps_odom_publisher_->publish(odom);
+}
+
 bool open_mower_next::sim::SimNode::isInDockingStation()
 {
   // Try to get the current charging port position
@@ -119,7 +164,8 @@ bool open_mower_next::sim::SimNode::isInDockingStation()
   if (!inDockingStation && distance < 1.0) {
     RCLCPP_INFO_THROTTLE(
       get_logger(), *get_clock(), 5000,
-      "Distance from charging port to docking station: %f m, angle: %f rad", distance, angle);
+      "Charging port offset from docking station: x=%f m, y=%f m, distance=%f m, angle=%f rad",
+      translation.x(), translation.y(), distance, angle);
   }
 
   if (inDockingStation) {

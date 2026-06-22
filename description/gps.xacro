@@ -2,11 +2,11 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gps">
     <joint name="gps_joint" type="fixed">
         <parent link="base_link"/>
-        <child link="gps"/>
+        <child link="gnss_link"/>
         <origin xyz="${robot['gps']['antenna']['offset'][0]} ${robot['gps']['antenna']['offset'][1]} ${robot['gps']['antenna']['offset'][2]}" rpy="0 0 0"/>
     </joint>
 
-    <link name="gps">
+    <link name="gnss_link">
     </link>
 
 </robot>
