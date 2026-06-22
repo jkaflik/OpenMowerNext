@@ -6,6 +6,8 @@ launch_log="$2"
 pid_file="$3"
 shift 3
 
+export ROS_AUTOMATIC_DISCOVERY_RANGE="${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}"
+
 bash utils/omdev-stop-launch.sh "$pid_file" >/dev/null 2>&1 || true
 
 mkdir -p "$(dirname "$launch_log")"
@@ -15,6 +17,7 @@ setsid bash -c '
   set -euo pipefail
   ros_distro="$1"
   shift
+  export ROS_AUTOMATIC_DISCOVERY_RANGE="${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}"
   set +u
   source "/opt/ros/${ros_distro}/setup.bash"
   source install/setup.bash

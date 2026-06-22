@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export ROS_AUTOMATIC_DISCOVERY_RANGE="${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}"
+
 if [ -z "${OM_DATUM_LAT}" ]; then
   export OM_DATUM_LAT=30.0
 

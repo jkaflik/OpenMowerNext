@@ -19,6 +19,7 @@ ament_target_dependencies(map_recorder
   tf2_geometry_msgs
   geometry_msgs
   nav2_msgs
+  omros2_firmware_msgs
   std_msgs
   std_srvs
 )

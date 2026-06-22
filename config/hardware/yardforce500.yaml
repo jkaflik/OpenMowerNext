@@ -24,7 +24,7 @@ mower:
 wheel:
   # x, y, z offset in m of wheel from center of robot
   # for the left and right wheels, the y offset is positive and negative respectively
-  offset: [0, 0.16, 0]
+  offset: [0, 0.16535, 0]
   # mass in kg
   mass: 0.2
 
@@ -39,7 +39,7 @@ wheel:
     min: -1.0
   # gear ratio between motor and wheel
 #  gear_ratio: 0.003378378378378 # 1:296 (motor:wheel) - calculated based on value 1600 ticks per m
-  gear_ratio: 0.027027027027027
+  gear_ratio: 0.026345892
 caster_wheel:
   # x, y offset in m of caster wheel from center of base link
   # z is calculated based on the radius of the wheel and it's offset

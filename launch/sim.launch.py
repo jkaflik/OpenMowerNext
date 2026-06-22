@@ -1,6 +1,8 @@
 import os
+import tempfile
 
 import xacro
+import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
@@ -20,6 +22,26 @@ from launch_ros.actions import Node
 from webots_ros2_driver.wait_for_controller_connection import WaitForControllerConnection
 from webots_ros2_driver.webots_controller import WebotsController
 from webots_ros2_driver.webots_launcher import Ros2SupervisorLauncher, WebotsLauncher
+
+
+def controller_parameters_file(share_directory):
+    controller_path = os.path.join(share_directory, "config", "controllers.yaml")
+    hardware_path = os.path.join(share_directory, "config", "hardware", "yardforce500.yaml")
+    with open(controller_path, "r", encoding="utf-8") as stream:
+        controllers = yaml.safe_load(stream)
+    with open(hardware_path, "r", encoding="utf-8") as stream:
+        hardware = yaml.safe_load(stream)
+    wheel_offset_y = float(hardware["wheel"]["offset"][1])
+    controllers.setdefault("diff_drive_base_controller", {}).setdefault("ros__parameters", {})[
+        "wheel_separation"
+    ] = 2.0 * abs(wheel_offset_y)
+
+    params_file = tempfile.NamedTemporaryFile(
+        mode="w", prefix="openmower_controllers_", suffix=".yaml", delete=False
+    )
+    with params_file:
+        yaml.safe_dump(controllers, params_file, sort_keys=False)
+    return params_file.name
 
 
 def shutdown_on_driver_failure(event, context):
@@ -47,6 +69,7 @@ def launch_setup(context, *args, **kwargs):
     enable_foxglove = LaunchConfiguration("enable_foxglove")
     foxglove_address = LaunchConfiguration("foxglove_address")
     foxglove_port = LaunchConfiguration("foxglove_port")
+    enable_joy_node = LaunchConfiguration("enable_joy_node")
     enable_navigation_readiness = LaunchConfiguration("enable_navigation_readiness")
 
     xacro_file = os.path.join(share_directory, "description", "robot.urdf.xacro")
@@ -73,6 +96,14 @@ def launch_setup(context, *args, **kwargs):
         remappings=[("/cmd_vel_out", "/diff_drive_base_controller/cmd_vel")],
     )
 
+    joystick = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(share_directory, "launch", "joystick.launch.py")),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "enable_joy_node": enable_joy_node,
+        }.items(),
+    )
+
     webots = WebotsLauncher(
         world=os.path.join(share_directory, "worlds", world),
         mode=mode,
@@ -82,7 +113,7 @@ def launch_setup(context, *args, **kwargs):
     )
     webots_supervisor = Ros2SupervisorLauncher(respawn=False, port=webots_port)
 
-    controller_params_file = os.path.join(share_directory, "config", "controllers.yaml")
+    controller_params_file = controller_parameters_file(share_directory)
     webots_robot_description = os.path.join(share_directory, "resource", "openmower_webots.urdf")
     webots_driver = WebotsController(
         robot_name="openmower",
@@ -125,7 +156,7 @@ def launch_setup(context, *args, **kwargs):
         nodes_to_start=[load_joint_state_controller],
     )
 
-    # Simulation helper node publishes the hardware-facing power topics.
+    # Simulation helper node publishes the hardware-facing power status topics.
     sim_node = Node(
         package="open_mower_next",
         executable="sim_node",
@@ -205,6 +236,7 @@ def launch_setup(context, *args, **kwargs):
         webots,
         webots_supervisor,
         node_robot_state_publisher,
+        joystick,
         twist_mux,
         webots_driver,
         wait_for_webots_driver,
@@ -259,6 +291,7 @@ def generate_launch_description():
             DeclareLaunchArgument("enable_foxglove", default_value="false"),
             DeclareLaunchArgument("foxglove_address", default_value="0.0.0.0"),
             DeclareLaunchArgument("foxglove_port", default_value="8765"),
+            DeclareLaunchArgument("enable_joy_node", default_value="false"),
             DeclareLaunchArgument("enable_navigation_readiness", default_value="true"),
             OpaqueFunction(function=launch_setup),
         ]
