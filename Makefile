@@ -32,7 +32,7 @@ build:
 
 build-release:
 	colcon build --base-paths "src/lib/*" --cmake-args -DCMAKE_BUILD_TYPE=Release
-	colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+	source install/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 sim:
 	bash -lc 'if [ -z "$${WEBOTS_HOME}" ] && [ -d "$${HOME}/.ros/webotsR2025a/webots" ]; then export WEBOTS_HOME="$${HOME}/.ros/webotsR2025a/webots"; fi && if [ -z "$${DISPLAY}" ] && [ -z "$${WEBOTS_OFFSCREEN}" ]; then export WEBOTS_OFFSCREEN=1; fi && source /opt/ros/$${ROS_DISTRO:-jazzy}/setup.bash && source install/setup.bash && set -a && source .devcontainer/default.env && set +a && ros2 launch open_mower_next sim.launch.py webots_stream:="$(WEBOTS_STREAM)" webots_port:="$(WEBOTS_PORT)"'
