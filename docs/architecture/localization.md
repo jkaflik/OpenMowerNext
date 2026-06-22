@@ -1,5 +1,5 @@
 ---
-title: Robot localization
+title: FusionCore localization
 ---
 # {{ $frontmatter.title }}
 
@@ -17,10 +17,10 @@ Later on, when undocking behavior is implemented, it will be possible to recover
 
 ## Sensors
 
-[robot_localization documentation](http://docs.ros.org/en/melodic/api/robot_localization/html/integrating_gps.html) nicely describes
-how to get wheel odometry, GPS and IMU sensors data fusion to get an accurate localization.
-
-![Senor data flow](http://docs.ros.org/en/melodic/api/robot_localization/html/_images/navsat_transform_workflow.png)
+OpenMowerNext uses [FusionCore](https://github.com/manankharwar/fusioncore) for wheel odometry,
+GPS and IMU sensor fusion. FusionCore publishes `/fusion/odom` and the `odom -> base_link` TF.
+The map datum from `OM_DATUM_LAT` and `OM_DATUM_LONG` is used as the fixed FusionCore reference
+origin so the fused odometry aligns with GeoJSON maps.
 
 ### Wheel odometry
 
@@ -30,11 +30,11 @@ Default motor controller VESC reports wheel odometry.
 
 Accelerometer and gyroscope is required. Magnetometer is not fused.
 
-### GPU
+### GPS
 
 It's expected GPS is RTK capable. Otherwise, localization will be inaccurate.
 More on this in [GPS](../gps.md) section.
 
 ## Configuration
 
-<<< ../../config/robot_localization.yaml{yaml}
+<<< ../../config/fusioncore.yaml{yaml}
